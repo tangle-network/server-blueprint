@@ -1,0 +1,6 @@
+{
+  "config": {
+    "runtime": "javascript",
+    "package": "@upstash/context7-mcp@latest"
+  }
+}
