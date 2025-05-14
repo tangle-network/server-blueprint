@@ -1,2 +1,0 @@
-runtime = "python" # will use uvx
-package = "mcp-server-fetch"
