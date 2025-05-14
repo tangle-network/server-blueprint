@@ -24,11 +24,11 @@ tower.workspace = true
 mcp-blueprint.workspace = true
 blueprint-sdk = { workspace = true, features = ["macros", "build"] }
 
-[package.metadata.blueprint]
-sources = [
-  { type = "Native", owner = "tangle-network", repo = "mcp-blueprint", tag = "0.1.0", binaries = [
-    { arch = "Amd64", os = "Linux", name = "amd64-linux-mcp-blueprint-cli" },
-    { arch = "Arm64", os = "Linux", name = "arm64-linux-mcp-blueprint-cli" },
-  ] },
+# [package.metadata.blueprint]
+# sources = [
+#   { type = "Native", owner = "tangle-network", repo = "mcp-blueprint", tag = "0.1.0", binaries = [
+#     { arch = "Amd64", os = "Linux", name = "amd64-linux-mcp-blueprint-cli" },
+#     { arch = "Arm64", os = "Linux", name = "arm64-linux-mcp-blueprint-cli" },
+#   ] },
 
-]
+# ]

@@ -2481,9 +2481,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-chain-setup"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac45886c8864889da1c08ddde943ffe9a2c90d612fd146e6294e70cd58747d2c"
+checksum = "e6e75f6d0afae02bc08f465aeb7d408acc2a8c81f98883302bdfc8aaab8412be"
 dependencies = [
  "blueprint-chain-setup-anvil",
  "blueprint-chain-setup-common",
@@ -2492,9 +2492,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-chain-setup-anvil"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7b55170b94b1d2fb791b712926167c569eb24ac76adaba941b959716650eb14a"
+checksum = "9cd3a61703464b47a072fecd372888aa447734142d9aed7ddea9128dc2491ff7"
 dependencies = [
  "alloy-contract",
  "alloy-provider",
@@ -2514,9 +2514,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-chain-setup-common"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e32c1d85424ab20f887008ca39efb2779e5616bd5417eb2465e6ef50aed9cbaa"
+checksum = "8d3c217b3777e94c3d549fa109ad5b6ecdce59d30a988feb28746a95b154d6c1"
 dependencies = [
  "alloy-signer-local",
  "blueprint-clients",
@@ -2535,9 +2535,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-chain-setup-tangle"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "77a3f20c8cc04dbef6cc96a0fa32df08ea4a63d4367150f48d007c19f37a43f9"
+checksum = "c914338de5488c488cbb81255190cca3b62d057756a5603720304d66d266f194"
 dependencies = [
  "alloy-json-abi",
  "alloy-network",
@@ -2584,9 +2584,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-client-eigenlayer"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "75b6abff269caeade9fc228331cf119e9a4ea0c77f41b99c43deade75e856cd3"
+checksum = "40d3c34b851bc47a44b9654244d600f994bd66fccdfbd4982f887daaf6da1899"
 dependencies = [
  "alloy-contract",
  "alloy-network",
@@ -2636,9 +2636,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-client-tangle"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1cf68ad9b1180255e5ead8dc89fc4be3eba8ece9443dd2c774508c0f9daa20b"
+checksum = "85cd7b95b89d958284807b7e07bb60a2ffbd1f7b10d086e04835cc596c4639a6"
 dependencies = [
  "auto_impl",
  "blueprint-client-core",
@@ -2657,9 +2657,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-clients"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4e83126f2277f51e1d65e7e20aaf5fcd796dd4a665df688d53567fb1102352dd"
+checksum = "6ee77fe11a203bc4d93d6d4f68508328565a403470f861d8a0ef6a33511990fb"
 dependencies = [
  "blueprint-client-core",
  "blueprint-client-eigenlayer",
@@ -2671,9 +2671,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-context-derive"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "62c1f7a57bc1c68649c69a5987d744fe2299edd8d325047578370e982d943cc3"
+checksum = "c0b3563d10fa074efb45dac0b9ecd85c07b046fb3c706037d24e8a549002640f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2682,9 +2682,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-contexts"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48cb34d30b3a781bfcd2795549dec59da594bcd7520a1c9647b3404d0aa49ebd"
+checksum = "1dc2e1b642bc2fcd1a931991df4d2b6a879e427359a45642da0906c509f0e567"
 dependencies = [
  "blueprint-clients",
  "blueprint-keystore",
@@ -2711,9 +2711,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-core-testing-utils"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca52b058715d3b65907c200d8432be132dfa1a63a004fa4dec0229b03c9d7a76"
+checksum = "d159b8be6149b4c2cbc0943edba2687163136e15d4bce1ac0ea849ec4371886a"
 dependencies = [
  "blueprint-clients",
  "blueprint-core",
@@ -2729,9 +2729,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto"
-version = "0.1.0-alpha.6"
+version = "0.1.0-alpha.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d22cfdacdf6ce686bff02cd16b936a56016c18541b0c371e46784e718a4cb559"
+checksum = "6284b35d2efc17a181b5f7fa6510fe0216aff7a4ace2de8362d5b052b0835b53"
 dependencies = [
  "blueprint-crypto-bls",
  "blueprint-crypto-bn254",
@@ -2747,9 +2747,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-bls"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b81817ab06847905d807a909ed6012d19334e2703e287f3390984ab504355223"
+checksum = "e4baae5a88889a22ca71c0bec559794c1b6ab00017f51f7332338befa81ecfce"
 dependencies = [
  "ark-serialize 0.5.0",
  "blueprint-crypto-core",
@@ -2764,9 +2764,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-bn254"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "331629203cb3daa19c2153e0fc9eb0b3250a4ced988f9ef5ca1abbbe28064809"
+checksum = "d06dcc267fc40ec6e16ab0fd6e5e2d43ceba6961c2fef765af6edb438c2161d0"
 dependencies = [
  "ark-bn254",
  "ark-ec 0.5.0",
@@ -2785,9 +2785,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-core"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "52bbb538b3167bbe61f342b4a7399fb5d834f03907a1ee1a58a2bf84799731fa"
+checksum = "426dd08edc3f0fd815fb6026de1998689d929a419b673f8039d4b1fa070ffaa1"
 dependencies = [
  "blueprint-std",
  "clap",
@@ -2797,9 +2797,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-ed25519"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "82c531c224a7500fd695b75d479f122c67ffe61eb917a44b53760d859e3c1699"
+checksum = "5fc558acf5b219650b92a5465a51c355a4a74c5ad11862768917e5aec7e204fb"
 dependencies = [
  "blueprint-crypto-core",
  "blueprint-std",
@@ -2824,9 +2824,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-k256"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "04716f1ce920915334c97ecb4a7bb40369c91472b0f7e4ddfb41b5c16d25a280"
+checksum = "0fd04323bc8b591ae0cf547b5c96e9549064946a6020944dfe71e25d69471657"
 dependencies = [
  "alloy-primitives 0.8.25",
  "alloy-signer-local",
@@ -2841,9 +2841,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-sp-core"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39668173c02a8eff7b44cb363b4dd09513d0129712f21cc49182c16ed5b5c657"
+checksum = "abadfd51aaf9ff8bf23ed39b57c248afbbdfe6fece1d34a1b7cd979a5a97be9c"
 dependencies = [
  "ark-ec 0.5.0",
  "ark-ff 0.5.0",
@@ -2862,9 +2862,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-sr25519"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60a11eebccfa156c642c43ee67fd5c195c91bd50a2796640778286a265a49be9"
+checksum = "082ebd7b41c7795307d9575d82190c927949f460a595779004b1d61566131cf8"
 dependencies = [
  "blueprint-crypto-core",
  "blueprint-std",
@@ -2877,9 +2877,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-crypto-tangle-pair-signer"
-version = "0.1.0-alpha.6"
+version = "0.1.0-alpha.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c129e1a0859f947afcccbcd1c87ea21655fe084d2a586667b06bb4d7ec1093a8"
+checksum = "2de63477cb1e7a929d062260bda6581388a4ef744e9962f92acaa13743b52ddc"
 dependencies = [
  "alloy-primitives 0.8.25",
  "alloy-signer-local",
@@ -2896,9 +2896,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-eigenlayer-extra"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d42543fbd9e44cfb511d41ecfb7583aa74be99bd1692faaa0a1cece2e486497d"
+checksum = "49c78364f2ab61aa719d3e9d6fbbc18c52ab98f7016843efeedef17e0e87901c"
 dependencies = [
  "alloy-contract",
  "alloy-network",
@@ -2957,9 +2957,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-keystore"
-version = "0.1.0-alpha.7"
+version = "0.1.0-alpha.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8498259c0b85cdf5e319277901faf15e10157f72bca46baae454980228a574c3"
+checksum = "f172700d59ed7f145940356dc42ef7d651a11baef9ce084123f3a143855f3d70"
 dependencies = [
  "alloy-network",
  "alloy-primitives 0.8.25",
@@ -3000,9 +3000,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-macros"
-version = "0.1.0-alpha.3"
+version = "0.1.0-alpha.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d9da585129a52eaeee6c2dfc8a1ee8cb86d41975f5689fb6b2d441e7a7bd17c3"
+checksum = "b032be90fea596d246d39f5872d6865a1b4871804184b59bdfb1fd5f1c74e458"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -3020,9 +3020,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-networking"
-version = "0.1.0-alpha.7"
+version = "0.1.0-alpha.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "12199c88871801cfefc1193011df677f73c29def8857a28275b412816ca129c2"
+checksum = "6fe87bd00a88fa657e637d9a00ce0d5b477fdfb4fd39c5b8c6368752439ca921"
 dependencies = [
  "alloy-primitives 0.8.25",
  "bincode",
@@ -3046,9 +3046,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-pricing-engine"
-version = "0.1.3"
+version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c40a5385103c097b62c26fe253f78112a8fb0c22999f3fab6fc41b2fc40b4d05"
+checksum = "e2b9f67b94ac93b120f4d42bef41f4ce2fad8e83b7ac61d79c37a819e92f654c"
 dependencies = [
  "anyhow",
  "bincode",
@@ -3122,9 +3122,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-runner"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1af822e5f66bd1749e6b6f98ce68e150fec3320c06a4027f82eec9c8377aac6"
+checksum = "87a9ebcf3a373a9149590c41a8c8d3a6f1a4d47a2f6ed702b65609a42696511d"
 dependencies = [
  "alloy-contract",
  "alloy-primitives 0.8.25",
@@ -3160,9 +3160,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-sdk"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97d129545938d783910c8691f61aa16b4a229c10425c15fd3d1e50314a148066"
+checksum = "2384eee9fd464d89655f36178c640ccd510bcf1b4bbf6321bb86200a11ee59af"
 dependencies = [
  "blueprint-build-utils",
  "blueprint-chain-setup",
@@ -3204,9 +3204,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-tangle-extra"
-version = "0.1.0-alpha.6"
+version = "0.1.0-alpha.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c34d4375e048ff87f6ec08e564776876fe97c4d2b6f70600d648995c096bbc1b"
+checksum = "9bf38c1272dcbb35cd7b09d24f85c542a7053392e87d1f8b0cf4685bd134c867"
 dependencies = [
  "blueprint-core",
  "bytes",
@@ -3225,9 +3225,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-tangle-testing-utils"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97a5d2954c08acb2ae4fca16c83e4f5759e099cef16b037be0956f824ab4e328"
+checksum = "d8cac2354eb41b289115b4c2ed51e0e334219189006f285908b240bf29e9a41b"
 dependencies = [
  "alloy-primitives 0.8.25",
  "alloy-signer-local",
@@ -3254,9 +3254,9 @@ dependencies = [
 
 [[package]]
 name = "blueprint-testing-utils"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a36c89bf05e3d0db10c1a485279448c741fa11cae851c9b1593a48d23ecded7f"
+checksum = "db1eb1f07fc1deb167f409b6f1ee53b9497d054f530a70d082cdda64683517e3"
 dependencies = [
  "blueprint-core-testing-utils",
  "blueprint-tangle-testing-utils",
@@ -6807,15 +6807,16 @@ dependencies = [
 
 [[package]]
 name = "generator"
-version = "0.8.4"
+version = "0.8.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc6bd114ceda131d3b1d665eba35788690ad37f5916457286b32ab6fd3c438dd"
+checksum = "d18470a76cb7f8ff746cf1f7470914f900252ec36bbc40b569d74b1258446827"
 dependencies = [
+ "cc",
  "cfg-if 1.0.0",
  "libc",
  "log",
  "rustversion",
- "windows 0.58.0",
+ "windows 0.61.1",
 ]
 
 [[package]]
@@ -8761,7 +8762,7 @@ dependencies = [
  "thiserror 2.0.12",
  "tracing",
  "yamux 0.12.1",
- "yamux 0.13.4",
+ "yamux 0.13.5",
 ]
 
 [[package]]
@@ -9018,9 +9019,9 @@ checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
 
 [[package]]
 name = "matrixmultiply"
-version = "0.3.9"
+version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9380b911e3e96d10c1f415da0876389aaf1b56759054eeb0de7df940c456ba1a"
+checksum = "a06de3016e9fae57a36fd14dba131fccf49f74b40b7fbdb472f96e361ec71a08"
 dependencies = [
  "autocfg",
  "rawpointer",
@@ -9032,6 +9033,9 @@ version = "0.1.0"
 dependencies = [
  "blueprint-sdk",
  "color-eyre",
+ "futures",
+ "serde",
+ "thiserror 2.0.12",
  "tokio",
 ]
 
@@ -13448,9 +13452,9 @@ dependencies = [
 
 [[package]]
 name = "resolv-conf"
-version = "0.7.3"
+version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc7c8f7f733062b66dc1c63f9db168ac0b97a9210e247fa90fdc9ad08f51b302"
+checksum = "95325155c684b1c89f7765e30bc1c42e4a6da51ca513615660cb8a62ef9a88e3"
 
 [[package]]
 name = "rfc6979"
@@ -16636,9 +16640,9 @@ checksum = "7b2093cf4c8eb1e67749a6762251bc9cd836b6fc171623bd0a9d324d37af2417"
 
 [[package]]
 name = "tangle-subxt"
-version = "0.16.0"
+version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49c437c708d4cf914dea0506eab85090cfca2e3a1ce09658ee7721b91085a64d"
+checksum = "70808ede5e0d819cf40787c3aeecc88fbf7bd8cea7e335c005dba9f2a0d388a8"
 dependencies = [
  "parity-scale-codec",
  "scale-info",
@@ -18190,12 +18194,24 @@ dependencies = [
 
 [[package]]
 name = "windows"
-version = "0.58.0"
+version = "0.61.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dd04d41d93c4992d421894c18c8b43496aa748dd4c081bac0dc93eb0489272b6"
+checksum = "c5ee8f3d025738cb02bad7868bbb5f8a6327501e870bf51f1b455b0a2454a419"
 dependencies = [
- "windows-core 0.58.0",
- "windows-targets 0.52.6",
+ "windows-collections",
+ "windows-core 0.61.0",
+ "windows-future",
+ "windows-link",
+ "windows-numerics",
+]
+
+[[package]]
+name = "windows-collections"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3beeceb5e5cfd9eb1d76b381630e82c4241ccd0d27f1a39ed41b2760b255c5e8"
+dependencies = [
+ "windows-core 0.61.0",
 ]
 
 [[package]]
@@ -18222,19 +18238,6 @@ dependencies = [
 
 [[package]]
 name = "windows-core"
-version = "0.58.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ba6d44ec8c2591c134257ce647b7ea6b20335bf6379a27dac5f1641fcf59f99"
-dependencies = [
- "windows-implement 0.58.0",
- "windows-interface 0.58.0",
- "windows-result 0.2.0",
- "windows-strings 0.1.0",
- "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "windows-core"
 version = "0.61.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4763c1de310c86d75a878046489e2e5ba02c649d185f21c67d4cf8a56d098980"
@@ -18247,21 +18250,20 @@ dependencies = [
 ]
 
 [[package]]
-name = "windows-implement"
-version = "0.57.0"
+name = "windows-future"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9107ddc059d5b6fbfbffdfa7a7fe3e22a226def0b2608f72e9d552763d3e1ad7"
+checksum = "7a1d6bbefcb7b60acd19828e1bc965da6fcf18a7e39490c5f8be71e54a19ba32"
 dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
+ "windows-core 0.61.0",
+ "windows-link",
 ]
 
 [[package]]
 name = "windows-implement"
-version = "0.58.0"
+version = "0.57.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bbd5b46c938e506ecbce286b6628a02171d56153ba733b6c741fc627ec9579b"
+checksum = "9107ddc059d5b6fbfbffdfa7a7fe3e22a226def0b2608f72e9d552763d3e1ad7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -18292,17 +18294,6 @@ dependencies = [
 
 [[package]]
 name = "windows-interface"
-version = "0.58.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "053c4c462dc91d3b1504c6fe5a726dd15e216ba718e84a0e46a88fbe5ded3515"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.101",
-]
-
-[[package]]
-name = "windows-interface"
 version = "0.59.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bd9211b69f8dcdfa817bfd14bf1c97c9188afa36f4750130fcdf3f400eca9fa8"
@@ -18317,6 +18308,16 @@ name = "windows-link"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76840935b766e1b0a05c0066835fb9ec80071d4c09a16f6bd5f7e655e3c14c38"
+
+[[package]]
+name = "windows-numerics"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9150af68066c4c5c07ddc0ce30421554771e528bde427614c61038bc2c92c2b1"
+dependencies = [
+ "windows-core 0.61.0",
+ "windows-link",
+]
 
 [[package]]
 name = "windows-registry"
@@ -18340,30 +18341,11 @@ dependencies = [
 
 [[package]]
 name = "windows-result"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1d1043d8214f791817bab27572aaa8af63732e11bf84aa21a45a78d6c317ae0e"
-dependencies = [
- "windows-targets 0.52.6",
-]
-
-[[package]]
-name = "windows-result"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c64fd11a4fd95df68efcfee5f44a294fe71b8bc6a91993e2791938abcc712252"
 dependencies = [
  "windows-link",
-]
-
-[[package]]
-name = "windows-strings"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4cd9b125c486025df0eabcb585e62173c6c9eddcec5d117d3b6e8c30e2ee4d10"
-dependencies = [
- "windows-result 0.2.0",
- "windows-targets 0.52.6",
 ]
 
 [[package]]
@@ -18845,16 +18827,16 @@ dependencies = [
 
 [[package]]
 name = "yamux"
-version = "0.13.4"
+version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "17610762a1207ee816c6fadc29220904753648aba0a9ed61c7b8336e80a559c4"
+checksum = "3da1acad1c2dc53f0dde419115a38bd8221d8c3e47ae9aeceaf453266d29307e"
 dependencies = [
  "futures",
  "log",
  "nohash-hasher",
  "parking_lot 0.12.3",
  "pin-project",
- "rand 0.8.5",
+ "rand 0.9.1",
  "static_assertions",
  "web-time",
 ]
