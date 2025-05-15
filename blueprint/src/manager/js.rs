@@ -11,6 +11,7 @@ use crate::manager::McpRunner;
 pub struct JsRunner;
 
 impl McpRunner for JsRunner {
+    #[tracing::instrument(skip(self), fields(%package, args, port_bindings, runtime = "js"))]
     fn start(
         &self,
         package: String,
@@ -20,11 +21,14 @@ impl McpRunner for JsRunner {
     ) -> Result<(Child, String), Error> {
         // Ensure bun is installed
         let mut checked = self.check();
+        blueprint_sdk::debug!(?checked, "Checking if bun is installed");
         if !matches!(checked, Ok(true)) {
             // Try to install if not present or check errored
+            blueprint_sdk::debug!("Installing bun");
             self.install()?;
             checked = self.check();
             if !matches!(checked, Ok(true)) {
+                blueprint_sdk::debug!(?checked, "bun install status");
                 return Err(Error::Io(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     "bun is not installed and could not be installed",
@@ -63,13 +67,16 @@ impl McpRunner for JsRunner {
         Ok(status.success())
     }
 
+    #[tracing::instrument(skip(self), fields(runtime = "js"))]
     fn install(&self) -> Result<(), Error> {
+        blueprint_sdk::debug!("Installing bun");
         let output = std::process::Command::new("sh")
             .arg("-c")
             .arg("curl -fsSL https://bun.sh/install | bash")
             .status()
             .map_err(Error::Io)?;
         if output.success() {
+            blueprint_sdk::debug!("bun installed successfully");
             Ok(())
         } else {
             Err(Error::Io(std::io::Error::new(

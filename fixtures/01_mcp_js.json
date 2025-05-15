@@ -1,6 +1,11 @@
-{
-  "config": {
-    "runtime": "javascript",
-    "package": "@upstash/context7-mcp@latest"
+[
+  {
+    "config": {
+      "runtime": "javascript",
+      "package": "@upstash/context7-mcp@latest",
+      "args": [],
+      "portBindings": [[8000, 0]],
+      "env": []
+    }
   }
-}
+]

@@ -10,6 +10,7 @@ use crate::manager::McpRunner;
 pub struct PythonRunner;
 
 impl McpRunner for PythonRunner {
+    #[tracing::instrument(skip(self), fields(%package, args, port_bindings, runtime = "python"))]
     fn start(
         &self,
         package: String,
@@ -19,11 +20,14 @@ impl McpRunner for PythonRunner {
     ) -> Result<(Child, String), Error> {
         // Ensure uv is installed
         let mut checked = self.check();
+        blueprint_sdk::debug!(?checked, "Checking if uv is installed");
         if !matches!(checked, Ok(true)) {
             // Try to install if not present or check errored
+            blueprint_sdk::debug!("Installing uv");
             self.install()?;
             checked = self.check();
             if !matches!(checked, Ok(true)) {
+                blueprint_sdk::debug!(?checked, "uv install status");
                 return Err(Error::Io(std::io::Error::new(
                     std::io::ErrorKind::Other,
                     "uv is not installed and could not be installed",
@@ -62,13 +66,16 @@ impl McpRunner for PythonRunner {
         Ok(status.success())
     }
 
+    #[tracing::instrument(skip(self), fields(runtime = "python"))]
     fn install(&self) -> Result<(), Error> {
         // Install uv
+        blueprint_sdk::debug!("Installing uv");
         let uv_install_status = std::process::Command::new("sh")
             .arg("-c")
             .arg("curl -LsSf https://astral.sh/uv/install.sh | sh")
             .status()
             .map_err(Error::Io)?;
+        blueprint_sdk::debug!(?uv_install_status, "uv install status");
         if !uv_install_status.success() {
             return Err(Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -76,6 +83,7 @@ impl McpRunner for PythonRunner {
             )));
         }
 
+        blueprint_sdk::debug!("uv installed successfully");
         // Install Python using uv
         let python_install_status = std::process::Command::new("uv")
             .arg("python")
@@ -83,6 +91,7 @@ impl McpRunner for PythonRunner {
             .status()
             .map_err(Error::Io)?;
         if python_install_status.success() {
+            blueprint_sdk::debug!("Python installed successfully");
             Ok(())
         } else {
             Err(Error::Io(std::io::Error::new(

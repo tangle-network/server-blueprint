@@ -78,6 +78,7 @@ pub trait McpRunner {
 }
 
 impl McpServerManager {
+    #[tracing::instrument(skip(self, config), fields(service_id, %owner))]
     pub fn start_server(
         &mut self,
         service_id: u64,
@@ -87,8 +88,13 @@ impl McpServerManager {
         use crate::manager::docker::DockerRunner;
         use crate::manager::js::JsRunner;
         use crate::manager::python::PythonRunner;
+
+        let args = config.args.0.unwrap_or_default().0.clone();
+
         let port_bindings: Vec<(u16, Option<u16>)> = config
             .port_bindings
+            .0
+            .unwrap_or_default()
             .0
             .into_iter()
             .map(|(host_port, container_port)| {
@@ -101,24 +107,35 @@ impl McpServerManager {
             })
             .collect();
 
+        let env_vars: BTreeMap<String, String> =
+            config.env.0.unwrap_or_default().0.into_iter().collect();
+
+        blueprint_sdk::debug!(
+            ?args,
+            ?port_bindings,
+            ?env_vars,
+            package = %config.package,
+            runtime = ?config.runtime,
+            "Starting MCP server with args"
+        );
         let (process, endpoint) = match config.runtime {
             crate::McpRuntime::Python => PythonRunner.start(
                 config.package.clone(),
-                config.args.0.clone(),
+                args.clone(),
                 port_bindings.clone(),
-                config.env_vars.clone(),
+                env_vars.clone(),
             )?,
             crate::McpRuntime::Javascript => JsRunner.start(
                 config.package.clone(),
-                config.args.0.clone(),
+                args.clone(),
                 port_bindings.clone(),
-                config.env_vars.clone(),
+                env_vars.clone(),
             )?,
             crate::McpRuntime::Docker => DockerRunner.start(
                 config.package.clone(),
-                config.args.0.clone(),
+                args.clone(),
                 port_bindings.clone(),
-                config.env_vars.clone(),
+                env_vars.clone(),
             )?,
             crate::McpRuntime::Unknown => {
                 return Err(Error::UnknownRuntime);
@@ -127,18 +144,24 @@ impl McpServerManager {
         let server = McpServer {
             runtime: config.runtime,
             package: config.package,
-            args: config.args.0,
+            args,
             port_bindings,
-            env_vars: config.env_vars,
+            env_vars,
             process: Some(process),
         };
         self.servers.insert(service_id, server);
         self.owners.insert(service_id, owner);
         self.endpoints.insert(service_id, endpoint.clone());
+        blueprint_sdk::debug!(
+            %endpoint,
+            "MCP server started"
+        );
         Ok(endpoint)
     }
     /// Stop the MCP server with the given service_id.
+    #[tracing::instrument(skip(self), fields(service_id))]
     pub fn stop_server(&mut self, service_id: u64) -> Result<bool, Error> {
+        blueprint_sdk::debug!("Stopping MCP server");
         if let Some(mut server) = self.servers.remove(&service_id) {
             if let Some(mut child) = server.process.take() {
                 match child.kill() {
@@ -148,18 +171,21 @@ impl McpServerManager {
                         _ = child.wait();
                     }
                     Err(e) if e.kind() == std::io::ErrorKind::InvalidInput => {
-                        // Process already exited, consider this a success for stopping.
+                        blueprint_sdk::debug!("Process already exited, no need to kill: {e}");
                     }
-                    Err(_e) => {
+                    Err(e) => {
                         // Failed to kill, proceed to remove maps to prevent re-attempts.
                         // In a real scenario, might re-insert server or handle error more gracefully.
+                        blueprint_sdk::warn!("Failed to kill process: {e}");
                     }
                 }
             }
             self.owners.remove(&service_id);
             self.endpoints.remove(&service_id);
+            blueprint_sdk::debug!("MCP server stopped");
             Ok(true)
         } else {
+            blueprint_sdk::debug!("MCP server not found");
             Ok(false)
         }
     }

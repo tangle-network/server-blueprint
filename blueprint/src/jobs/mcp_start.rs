@@ -47,6 +47,8 @@ pub async fn mcp_start(
         .map(|p| p.config)
         .map_err(Error::InvalidRequestParams)?;
 
+    blueprint_sdk::debug!(?config, %service_id, %owner, "Starting MCP server with config");
+
     let mut mcp_server_manager = ctx.mcp_server_manager.lock().await;
     let endpoint = mcp_server_manager.start_server(service_id, owner, config)?;
 

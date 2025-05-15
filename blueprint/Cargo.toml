@@ -16,6 +16,7 @@ blueprint-sdk = { workspace = true, features = ["std", "tangle", "macros"] }
 tokio = { workspace = true, features = ["sync"] }
 thiserror.workspace = true
 futures.workspace = true
+tracing.workspace = true
 serde = { workspace = true, features = ["derive"] }
 
 [dev-dependencies]

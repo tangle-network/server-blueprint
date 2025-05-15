@@ -1,12 +1,10 @@
 use crate::manager::McpServerManager;
 use blueprint_sdk::macros::context::ServicesContext;
 use blueprint_sdk::runner::config::BlueprintEnvironment;
-use blueprint_sdk::tangle::extract::{List, TangleArg};
+use blueprint_sdk::tangle::extract::{List, Optional, TangleArg};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-// The job ID (to be generated?)
-pub const SAY_HELLO_JOB_ID: u32 = 0;
 /// Different types of errors that can occur in the mcp server
 mod error;
 /// Blueprint Jobs
@@ -32,7 +30,7 @@ pub enum McpRuntime {
 }
 
 #[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub struct McpServerConfig {
     /// The different runtimes that can be used to run the mcp server
     pub runtime: McpRuntime,
@@ -40,20 +38,20 @@ pub struct McpServerConfig {
     pub package: String,
     /// A list of arguments to pass to the mcp server
     #[serde(default)]
-    pub args: List<String>,
+    pub args: Optional<List<String>>,
     /// The port to bind the mcp server to
     /// This is a list of tuples, where the first element is the host port and the second element is the
     /// container port (if applicable)
     #[serde(default)]
-    pub port_bindings: List<(u16, u16)>,
+    pub port_bindings: Optional<List<(u16, u16)>>,
     /// Environment variables for the MCP server
     #[serde(default)]
-    pub env_vars: std::collections::BTreeMap<String, String>,
+    pub env: Optional<List<(String, String)>>,
 }
 
 /// The Service Request Parameters
 #[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "camelCase")]
 pub struct RequestParams {
     pub config: McpServerConfig,
 }

@@ -14,7 +14,7 @@ keywords.workspace = true
 [dependencies]
 mcp-blueprint.workspace = true
 
-blueprint-sdk = { workspace = true, features = ["std"] }
+blueprint-sdk = { workspace = true, features = ["std", "tracing"] }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 tracing = { workspace = true }
