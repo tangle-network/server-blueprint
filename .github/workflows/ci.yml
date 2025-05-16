@@ -21,7 +21,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2024-10-13
+          toolchain: stable
           components: rustfmt
 
       - name: Check Formatting
@@ -38,7 +38,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
       - name: Verify Forge installation
         run: forge --version
@@ -48,7 +48,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2024-10-13
+          toolchain: stable
           components: clippy
 
       - uses: swatinem/rust-cache@v2
@@ -74,7 +74,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
       - name: Verify Forge installation
         run: forge --version
@@ -84,7 +84,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly-2024-10-13
+          toolchain: stable
           components: clippy
 
       - uses: swatinem/rust-cache@v2
