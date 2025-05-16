@@ -1,5 +1,5 @@
 use std::collections::BTreeMap;
-use std::process::Child;
+use tokio_util::sync::CancellationToken;
 
 use crate::error::Error;
 use crate::manager::McpRunner;
@@ -7,21 +7,21 @@ use crate::manager::McpRunner;
 pub struct DockerRunner;
 
 impl McpRunner for DockerRunner {
-    fn start(
+    async fn start(
         &self,
         _package: String,
         _args: Vec<String>,
         _port_bindings: Vec<(u16, Option<u16>)>,
         _env_vars: BTreeMap<String, String>,
-    ) -> Result<(Child, String), Error> {
+    ) -> Result<(CancellationToken, String), Error> {
         todo!("Docker runner not implemented");
     }
 
-    fn check(&self) -> Result<bool, Error> {
+    async fn check(&self) -> Result<bool, Error> {
         todo!("Docker check not implemented");
     }
 
-    fn install(&self) -> Result<(), Error> {
+    async fn install(&self) -> Result<(), Error> {
         todo!("Docker install not implemented");
     }
 }

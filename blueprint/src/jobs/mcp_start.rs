@@ -50,7 +50,9 @@ pub async fn mcp_start(
     blueprint_sdk::debug!(?config, %service_id, %owner, "Starting MCP server with config");
 
     let mut mcp_server_manager = ctx.mcp_server_manager.lock().await;
-    let endpoint = mcp_server_manager.start_server(service_id, owner, config)?;
+    let endpoint = mcp_server_manager
+        .start_server(service_id, owner, config)
+        .await?;
 
     // TODO: register the endpoint, service id and owner in the auth proxy.
 

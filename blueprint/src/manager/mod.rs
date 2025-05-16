@@ -14,6 +14,7 @@
 use std::collections::BTreeMap;
 
 use blueprint_sdk::tangle_subxt::subxt::utils::AccountId32;
+use tokio_util::sync::CancellationToken;
 
 use crate::McpRuntime;
 use crate::error::Error;
@@ -53,33 +54,32 @@ pub struct McpServer {
     #[serde(default)]
     pub env_vars: BTreeMap<String, String>,
 
-    /// The process handle for the mcp server
-    /// This is used to kill the process when the server is stopped
+    /// The cancellation token for the mcp server
     #[serde(skip)]
-    pub process: Option<std::process::Child>,
+    pub cancellation_token: Option<CancellationToken>,
 }
 
 pub trait McpRunner {
     /// Start the mcp server
-    /// Returns (Child process, endpoint)
-    fn start(
+    /// Returns (CancellationToken, endpoint)
+    async fn start(
         &self,
         package: String,
         args: Vec<String>,
         port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
-    ) -> Result<(std::process::Child, String), Error>;
+    ) -> Result<(CancellationToken, String), Error>;
 
     /// Check if the runtime is installed and available
-    fn check(&self) -> Result<bool, Error>;
+    async fn check(&self) -> Result<bool, Error>;
 
     /// Install the runtime if not present
-    fn install(&self) -> Result<(), Error>;
+    async fn install(&self) -> Result<(), Error>;
 }
 
 impl McpServerManager {
     #[tracing::instrument(skip(self, config), fields(service_id, %owner))]
-    pub fn start_server(
+    pub async fn start_server(
         &mut self,
         service_id: u64,
         owner: AccountId32,
@@ -118,25 +118,37 @@ impl McpServerManager {
             runtime = ?config.runtime,
             "Starting MCP server with args"
         );
-        let (process, endpoint) = match config.runtime {
-            crate::McpRuntime::Python => PythonRunner.start(
-                config.package.clone(),
-                args.clone(),
-                port_bindings.clone(),
-                env_vars.clone(),
-            )?,
-            crate::McpRuntime::Javascript => JsRunner.start(
-                config.package.clone(),
-                args.clone(),
-                port_bindings.clone(),
-                env_vars.clone(),
-            )?,
-            crate::McpRuntime::Docker => DockerRunner.start(
-                config.package.clone(),
-                args.clone(),
-                port_bindings.clone(),
-                env_vars.clone(),
-            )?,
+        let (ct, endpoint) = match config.runtime {
+            crate::McpRuntime::Python => {
+                PythonRunner
+                    .start(
+                        config.package.clone(),
+                        args.clone(),
+                        port_bindings.clone(),
+                        env_vars.clone(),
+                    )
+                    .await?
+            }
+            crate::McpRuntime::Javascript => {
+                JsRunner
+                    .start(
+                        config.package.clone(),
+                        args.clone(),
+                        port_bindings.clone(),
+                        env_vars.clone(),
+                    )
+                    .await?
+            }
+            crate::McpRuntime::Docker => {
+                DockerRunner
+                    .start(
+                        config.package.clone(),
+                        args.clone(),
+                        port_bindings.clone(),
+                        env_vars.clone(),
+                    )
+                    .await?
+            }
             crate::McpRuntime::Unknown => {
                 return Err(Error::UnknownRuntime);
             }
@@ -147,7 +159,7 @@ impl McpServerManager {
             args,
             port_bindings,
             env_vars,
-            process: Some(process),
+            cancellation_token: Some(ct),
         };
         self.servers.insert(service_id, server);
         self.owners.insert(service_id, owner);
@@ -160,25 +172,13 @@ impl McpServerManager {
     }
     /// Stop the MCP server with the given service_id.
     #[tracing::instrument(skip(self), fields(service_id))]
-    pub fn stop_server(&mut self, service_id: u64) -> Result<bool, Error> {
+    pub async fn stop_server(&mut self, service_id: u64) -> Result<bool, Error> {
         blueprint_sdk::debug!("Stopping MCP server");
         if let Some(mut server) = self.servers.remove(&service_id) {
-            if let Some(mut child) = server.process.take() {
-                match child.kill() {
-                    Ok(_) => {
-                        // Optionally wait for the process to ensure it's fully terminated,
-                        // though kill() usually suffices. Could log error if wait fails.
-                        _ = child.wait();
-                    }
-                    Err(e) if e.kind() == std::io::ErrorKind::InvalidInput => {
-                        blueprint_sdk::debug!("Process already exited, no need to kill: {e}");
-                    }
-                    Err(e) => {
-                        // Failed to kill, proceed to remove maps to prevent re-attempts.
-                        // In a real scenario, might re-insert server or handle error more gracefully.
-                        blueprint_sdk::warn!("Failed to kill process: {e}");
-                    }
-                }
+            if let Some(ct) = server.cancellation_token.take() {
+                ct.cancel();
+                ct.cancelled().await;
+                blueprint_sdk::debug!("MCP server cancelled");
             }
             self.owners.remove(&service_id);
             self.endpoints.remove(&service_id);

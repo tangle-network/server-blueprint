@@ -11,6 +11,8 @@ mod error;
 mod jobs;
 /// The mcp server manager
 mod manager;
+/// The MCP Transport converter
+mod transport;
 
 pub use jobs::{MCP_START_JOB_ID, MCP_STOP_JOB_ID, mcp_start, mcp_stop};
 

@@ -12,6 +12,6 @@ pub async fn mcp_stop(
     TangleArg(_): TangleArg<()>,
 ) -> Result<TangleResult<bool>, Error> {
     let mut manager = ctx.mcp_server_manager.lock().await;
-    let stopped = manager.stop_server(service_id)?;
+    let stopped = manager.stop_server(service_id).await?;
     Ok(TangleResult(stopped))
 }
