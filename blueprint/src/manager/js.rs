@@ -57,8 +57,8 @@ impl McpRunner for JsRunner {
                 cmd.env(k, v);
             }
 
-            let transport = TokioChildProcess::new(&mut cmd)?;
-            Ok(transport)
+            let transport = TokioChildProcess::new(&mut cmd);
+            futures::future::ready(transport)
         };
         let ct = SseServer::serve(endpoint.parse()?).await?.forward(factory);
         Ok((ct, endpoint))

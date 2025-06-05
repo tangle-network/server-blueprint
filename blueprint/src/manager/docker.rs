@@ -1,11 +1,13 @@
+use docktopus::bollard::image::{CreateImageOptions, ListImagesOptions};
 use docktopus::bollard::models::PortBinding;
-use futures::TryFutureExt;
+use futures::{StreamExt, TryFutureExt};
 use std::collections::{BTreeMap, HashMap};
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
 use crate::error::Error;
 use crate::manager::McpRunner;
+use crate::transport::SseServer;
 
 /// Docker runner
 #[derive(Debug, Clone)]
@@ -84,6 +86,173 @@ impl DockerRunner {
         blueprint_sdk::debug!("Docker installed successfully on Linux");
         Ok(())
     }
+
+    /// Check if a Docker image exists locally using the bollard API
+    ///
+    /// This method queries the Docker daemon to see if the specified image is already
+    /// present in the local image registry. It uses the Docker API's list_images endpoint
+    /// with a reference filter to efficiently check for the image without downloading it.
+    ///
+    /// # Arguments
+    /// * `docker_client` - A reference to the bollard Docker client for API communication
+    /// * `image` - The Docker image name/tag to check (e.g., "nginx:latest", "ubuntu:20.04")
+    ///
+    /// # Returns
+    /// * `Ok(true)` if the image exists locally
+    /// * `Ok(false)` if the image does not exist locally
+    /// * `Err(Error)` if there was an error communicating with the Docker daemon
+    ///
+    /// # Examples
+    /// ```rust
+    /// let exists = runner.check_image_exists(&docker_client, "nginx:latest").await?;
+    /// if exists {
+    ///     println!("Image is already available locally");
+    /// }
+    /// ```
+    async fn check_image_exists(
+        &self,
+        docker_client: &docktopus::bollard::Docker,
+        image: &str,
+    ) -> Result<bool, Error> {
+        // Configure the list images request to filter by the specific image reference
+        // The 'reference' filter matches images by their name and tag
+        let options = ListImagesOptions::<String> {
+            all: false, // Only show non-intermediate images (not build cache layers)
+            filters: HashMap::from([("reference".to_string(), vec![image.to_string()])]),
+            ..Default::default()
+        };
+
+        // Query the Docker daemon for images matching our filter
+        let images = docker_client
+            .list_images(Some(options))
+            .await
+            .map_err(|e| {
+                Error::Io(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    format!("Failed to list Docker images: {}", e),
+                ))
+            })?;
+
+        // If any images were returned, the image exists locally
+        Ok(!images.is_empty())
+    }
+
+    /// Pull a Docker image from a registry using the bollard API
+    ///
+    /// This method downloads a Docker image from a registry (Docker Hub by default)
+    /// to the local Docker daemon. It uses Docker's create_image API which streams
+    /// the download progress and handles layers efficiently.
+    ///
+    /// # Arguments
+    /// * `docker_client` - A reference to the bollard Docker client for API communication
+    /// * `image` - The Docker image name/tag to pull (e.g., "nginx:latest", "ubuntu:20.04")
+    ///
+    /// # Returns
+    /// * `Ok(())` if the image was successfully pulled
+    /// * `Err(Error)` if there was an error during the pull operation
+    ///
+    /// # Behavior
+    /// - Streams the download progress and logs status updates
+    /// - Handles Docker registry authentication if configured
+    /// - Automatically retries failed layer downloads (handled by Docker daemon)
+    /// - Validates image integrity during download
+    ///
+    /// # Examples
+    /// ```rust
+    /// runner.pull_image(&docker_client, "nginx:latest").await?;
+    /// println!("Image pulled successfully");
+    /// ```
+    async fn pull_image(
+        &self,
+        docker_client: &docktopus::bollard::Docker,
+        image: &str,
+    ) -> Result<(), Error> {
+        blueprint_sdk::debug!(?image, "Pulling Docker image");
+
+        use futures::StreamExt;
+
+        // Configure the image pull request
+        // from_image specifies the image name and tag to pull
+        let options = CreateImageOptions {
+            from_image: image,
+            ..Default::default()
+        };
+
+        // Create a stream for the image pull operation
+        // The Docker API returns progress updates as a stream of events
+        let mut stream = docker_client.create_image(Some(options), None, None);
+
+        // Process each event in the pull stream
+        while let Some(result) = stream.next().await {
+            match result {
+                Ok(info) => {
+                    // Check if the pull operation encountered an error
+                    if let Some(error) = info.error {
+                        return Err(Error::Io(std::io::Error::new(
+                            std::io::ErrorKind::Other,
+                            format!("Failed to pull Docker image {}: {}", image, error),
+                        )));
+                    }
+                    // Log progress updates for debugging and monitoring
+                    if let Some(status) = info.status {
+                        blueprint_sdk::debug!(?image, status, "Image pull progress");
+                    }
+                }
+                Err(e) => {
+                    // Handle stream errors (network issues, Docker daemon problems, etc.)
+                    return Err(Error::Io(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("Failed to pull Docker image {}: {}", image, e),
+                    )));
+                }
+            }
+        }
+
+        blueprint_sdk::debug!(?image, "Docker image pulled successfully");
+        Ok(())
+    }
+
+    /// Ensure a Docker image is available locally, pulling it if necessary
+    ///
+    /// This is a convenience method that combines image existence checking and pulling.
+    /// It first checks if the image exists locally, and only pulls it if it's not found.
+    /// This approach is efficient and avoids unnecessary network operations.
+    ///
+    /// # Arguments
+    /// * `docker_client` - A reference to the bollard Docker client for API communication
+    /// * `image` - The Docker image name/tag to ensure is available (e.g., "nginx:latest")
+    ///
+    /// # Returns
+    /// * `Ok(())` if the image is available (either was already present or successfully pulled)
+    /// * `Err(Error)` if there was an error checking for or pulling the image
+    ///
+    /// # Workflow
+    /// 1. Check if the image exists locally using `check_image_exists()`
+    /// 2. If image is not found, pull it using `pull_image()`
+    /// 3. If image already exists, skip the pull operation
+    ///
+    /// # Examples
+    /// ```rust
+    /// // This will only pull if the image isn't already present
+    /// runner.ensure_image_available(&docker_client, "nginx:latest").await?;
+    /// println!("Image is now available for use");
+    /// ```
+    async fn ensure_image_available(
+        &self,
+        docker_client: &docktopus::bollard::Docker,
+        image: &str,
+    ) -> Result<(), Error> {
+        // First check if the image is already available locally
+        if !self.check_image_exists(docker_client, image).await? {
+            // Image not found locally, need to pull it from registry
+            blueprint_sdk::debug!(?image, "Image not found locally, pulling");
+            self.pull_image(docker_client, image).await?;
+        } else {
+            // Image already exists, no action needed
+            blueprint_sdk::debug!(?image, "Image already exists locally");
+        }
+        Ok(())
+    }
 }
 
 impl McpRunner for DockerRunner {
@@ -116,17 +285,21 @@ impl McpRunner for DockerRunner {
         // Determine endpoint from first host port
         let endpoint = port_bindings
             .first()
-            .map(|(host_port, _)| format!("http://127.0.0.1:{}", host_port))
+            .map(|(host_port, _)| format!("127.0.0.1:{}", host_port))
             .ok_or_else(|| Error::MissingPortBinding)?;
 
         // Use the struct's docker client
         let docker_client = ctx.docker.clone();
 
+        // Ensure the Docker image is available locally (pull if not present)
+        self.ensure_image_available(&docker_client, &package)
+            .await?;
+
         // Since docktopus v0.3.0 doesn't support port bindings in Container API,
         // we need to create the container manually using bollard Config
         use docktopus::bollard::container::{
-            Config, CreateContainerOptions, RemoveContainerOptions, StartContainerOptions,
-            StopContainerOptions,
+            AttachContainerOptions, Config, CreateContainerOptions, RemoveContainerOptions,
+            StartContainerOptions, StopContainerOptions,
         };
         use docktopus::bollard::models::HostConfig;
 
@@ -190,30 +363,67 @@ impl McpRunner for DockerRunner {
 
         blueprint_sdk::debug!(?container_id, "Started Docker container");
 
-        // Create cancellation token that will stop the container when cancelled
-        let cancellation_token = CancellationToken::new();
-        let stop_token = cancellation_token.clone();
+        // Clone the necessary values for the factory closure
+        let docker_client_factory = docker_client.clone();
+        let factory_container_id = container_id.clone();
+
+        // Create Docker transport factory using async block approach
+        let factory = move || {
+            let docker_client_clone = docker_client_factory.clone();
+            let container_id_clone = factory_container_id.clone();
+
+            async move {
+                // Attach to the container to get stdin/stdout streams
+                let attach_options = AttachContainerOptions::<String> {
+                    stdout: Some(true),
+                    stdin: Some(true),
+                    stream: Some(true),
+                    ..Default::default()
+                };
+
+                match docker_client_clone
+                    .attach_container(&container_id_clone, Some(attach_options))
+                    .await
+                {
+                    Ok(res) => Ok(DockerTransport::new(res)),
+                    Err(e) => Err(std::io::Error::new(
+                        std::io::ErrorKind::Other,
+                        format!("Failed to attach to Docker container: {e}"),
+                    )),
+                }
+            }
+        };
+
+        let ct = SseServer::serve(endpoint.parse()?).await?.forward(factory);
+
+        // Create cleanup task that will stop the container when cancelled
         let stop_docker_client = docker_client.clone();
+        let cleanup_container_id = container_id.clone();
+        let cleanup_ct = ct.clone();
 
         tokio::spawn(async move {
-            stop_token.cancelled().await;
-            blueprint_sdk::debug!(?container_id, "Stopping Docker container");
+            cleanup_ct.cancelled().await;
+            blueprint_sdk::debug!(?cleanup_container_id, "Stopping Docker container");
 
             if let Err(e) = stop_docker_client
-                .stop_container(&container_id, None::<StopContainerOptions>)
+                .stop_container(&cleanup_container_id, None::<StopContainerOptions>)
                 .await
             {
-                blueprint_sdk::error!(?e, ?container_id, "Failed to stop Docker container");
+                blueprint_sdk::error!(?e, ?cleanup_container_id, "Failed to stop Docker container");
             }
             if let Err(e) = stop_docker_client
-                .remove_container(&container_id, None::<RemoveContainerOptions>)
+                .remove_container(&cleanup_container_id, None::<RemoveContainerOptions>)
                 .await
             {
-                blueprint_sdk::error!(?e, ?container_id, "Failed to remove Docker container");
+                blueprint_sdk::error!(
+                    ?e,
+                    ?cleanup_container_id,
+                    "Failed to remove Docker container"
+                );
             }
         });
 
-        Ok((cancellation_token, endpoint))
+        Ok((ct, endpoint))
     }
 
     async fn check(&self, _ctx: &crate::MyContext) -> Result<bool, Error> {
@@ -230,5 +440,56 @@ impl McpRunner for DockerRunner {
     #[tracing::instrument(skip(self, _ctx), fields(runtime = "docker"))]
     async fn install(&self, _ctx: &crate::MyContext) -> Result<(), Error> {
         self.install_docker().await
+    }
+}
+
+struct DockerTransport {
+    results: docktopus::bollard::container::AttachContainerResults,
+}
+
+impl DockerTransport {
+    fn new(results: docktopus::bollard::container::AttachContainerResults) -> Self {
+        Self { results }
+    }
+}
+
+impl<R, A> rmcp::transport::IntoTransport<R, std::io::Error, A> for DockerTransport
+where
+    R: rmcp::service::ServiceRole,
+{
+    fn into_transport(
+        self,
+    ) -> (
+        impl futures::Sink<rmcp::service::TxJsonRpcMessage<R>, Error = std::io::Error> + Send + 'static,
+        impl futures::Stream<Item = rmcp::service::RxJsonRpcMessage<R>> + Send + 'static,
+    ) {
+        let stream = self.results.output;
+        let sink = rmcp::transport::io::from_async_write(self.results.input);
+        let mapped_stream = stream.map(|msg| match msg {
+            Ok(log) => serde_json::from_slice::<rmcp::service::RxJsonRpcMessage<R>>(log.as_ref())
+                .map_err(|e| {
+                    rmcp::service::RxJsonRpcMessage::<R>::Error(rmcp::model::JsonRpcError {
+                        jsonrpc: rmcp::model::JsonRpcVersion2_0,
+                        id: rmcp::model::NumberOrString::Number(1),
+                        error: rmcp::model::ErrorData {
+                            code: rmcp::model::ErrorCode::PARSE_ERROR,
+                            message: e.to_string().into(),
+                            data: None,
+                        },
+                    })
+                })
+                .unwrap(),
+            Err(e) => rmcp::service::RxJsonRpcMessage::<R>::Error(rmcp::model::JsonRpcError {
+                jsonrpc: rmcp::model::JsonRpcVersion2_0,
+                id: rmcp::model::NumberOrString::Number(1),
+                error: rmcp::model::ErrorData {
+                    code: rmcp::model::ErrorCode::INTERNAL_ERROR,
+                    message: e.to_string().into(),
+                    data: None,
+                },
+            }),
+        });
+
+        (sink, mapped_stream)
     }
 }

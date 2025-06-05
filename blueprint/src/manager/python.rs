@@ -56,8 +56,8 @@ impl McpRunner for PythonRunner {
             for (k, v) in env_vars.iter() {
                 cmd.env(k, v);
             }
-            let transport = TokioChildProcess::new(&mut cmd)?;
-            Ok(transport)
+            let transport = TokioChildProcess::new(&mut cmd);
+            futures::future::ready(transport)
         };
 
         let ct = SseServer::serve(endpoint.parse()?).await?.forward(factory);

@@ -118,11 +118,11 @@ fi
 read -p "Do you want to setup a new service instance? (y/n) " setup_service
 if [ "$setup_service" = "y" ]; then
     echo "Registering as operator..."
-    cargo tangle blueprint register --blueprint-id 0 --keystore-uri ./target/keystore
+    cargo tangle blueprint register --blueprint-id 0 --keystore-uri ./target/keystore || echo "Operator already registered"
 
     echo "Requesting service instance..."
     cargo tangle blueprint request-service --blueprint-id 0 --keystore-uri ./target/keystore --value 0 --target-operators 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY \
-        --params-file ./fixtures/01_mcp_js.json
+        --params-file ./fixtures/02_mcp_local_docker.json
 
     echo "Approving service instance..."
     cargo tangle blueprint accept-request --request-id 0 --keystore-uri ./target/keystore

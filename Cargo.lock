@@ -9133,6 +9133,7 @@ version = "0.1.0"
 dependencies = [
  "axum 0.8.4",
  "blueprint-sdk",
+ "bytes",
  "color-eyre",
  "docktopus",
  "futures",

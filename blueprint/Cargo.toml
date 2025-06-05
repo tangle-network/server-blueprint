@@ -23,6 +23,7 @@ tokio-stream = { workspace = true }
 tokio-util = { workspace = true }
 docktopus = { workspace = true, features = ["deploy"] }
 uuid = { workspace = true, features = ["v4"] }
+bytes = { workspace = true }
 rmcp = { workspace = true, features = [
   "base64",
   "server",

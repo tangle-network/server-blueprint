@@ -314,16 +314,17 @@ impl SseServer {
         ct
     }
 
-    pub fn forward<T, F>(mut self, factory: F) -> CancellationToken
+    pub fn forward<T, F, O>(mut self, factory: F) -> CancellationToken
     where
         T: IntoTransport<RoleClient, std::io::Error, ()>,
-        F: Fn() -> Result<T, std::io::Error> + Send + 'static,
+        F: Fn() -> O + Send + 'static,
+        O: Future<Output = Result<T, std::io::Error>> + Send + 'static,
     {
         let ct = self.config.ct.clone();
         tokio::spawn(async move {
             while let Some(transport) = self.next_transport().await {
                 let ct = self.config.ct.child_token();
-                let inner_transport = match factory() {
+                let inner_transport = match factory().await {
                     Ok(inner_transport) => inner_transport.into_transport(),
                     Err(e) => {
                         tracing::error!(error = %e, "create transport error");
