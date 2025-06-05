@@ -17,7 +17,8 @@ use tracing::error;
 use tracing::level_filters::LevelFilter;
 
 #[tokio::main]
-async fn main() -> Result<(), blueprint_sdk::Error> {
+async fn main() -> color_eyre::Result<()> {
+    color_eyre::install()?;
     setup_log();
 
     blueprint_sdk::info!("Starting MCP blueprint...");
@@ -35,13 +36,14 @@ async fn main() -> Result<(), blueprint_sdk::Error> {
     let tangle_config = TangleConfig::default();
 
     let service_id = env.protocol_settings.tangle()?.service_id.unwrap();
+    let ctx = MyContext::new(env.clone()).await?;
     let result = BlueprintRunner::builder(tangle_config, env.clone())
         .router(
             Router::new()
                 .route(MCP_START_JOB_ID, mcp_start.layer(TangleLayer))
                 .route(MCP_STOP_JOB_ID, mcp_stop.layer(TangleLayer))
                 .layer(FilterLayer::new(MatchesServiceId(service_id)))
-                .with_context(MyContext::new(env)),
+                .with_context(ctx),
         )
         .producer(tangle_producer)
         .consumer(tangle_consumer)

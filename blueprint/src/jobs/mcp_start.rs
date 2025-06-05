@@ -51,7 +51,7 @@ pub async fn mcp_start(
 
     let mut mcp_server_manager = ctx.mcp_server_manager.lock().await;
     let endpoint = mcp_server_manager
-        .start_server(service_id, owner, config)
+        .start_server(&ctx, service_id, owner, config)
         .await?;
 
     // TODO: register the endpoint, service id and owner in the auth proxy.

@@ -64,6 +64,7 @@ pub trait McpRunner {
     /// Returns (CancellationToken, endpoint)
     async fn start(
         &self,
+        ctx: &crate::MyContext,
         package: String,
         args: Vec<String>,
         port_bindings: Vec<(u16, Option<u16>)>,
@@ -71,16 +72,17 @@ pub trait McpRunner {
     ) -> Result<(CancellationToken, String), Error>;
 
     /// Check if the runtime is installed and available
-    async fn check(&self) -> Result<bool, Error>;
+    async fn check(&self, ctx: &crate::MyContext) -> Result<bool, Error>;
 
     /// Install the runtime if not present
-    async fn install(&self) -> Result<(), Error>;
+    async fn install(&self, ctx: &crate::MyContext) -> Result<(), Error>;
 }
 
 impl McpServerManager {
-    #[tracing::instrument(skip(self, config), fields(service_id, %owner))]
+    #[tracing::instrument(skip(self, ctx, config), fields(service_id, %owner))]
     pub async fn start_server(
         &mut self,
+        ctx: &crate::MyContext,
         service_id: u64,
         owner: AccountId32,
         config: crate::McpServerConfig,
@@ -122,6 +124,7 @@ impl McpServerManager {
             crate::McpRuntime::Python => {
                 PythonRunner
                     .start(
+                        ctx,
                         config.package.clone(),
                         args.clone(),
                         port_bindings.clone(),
@@ -132,6 +135,7 @@ impl McpServerManager {
             crate::McpRuntime::Javascript => {
                 JsRunner
                     .start(
+                        ctx,
                         config.package.clone(),
                         args.clone(),
                         port_bindings.clone(),
@@ -142,6 +146,7 @@ impl McpServerManager {
             crate::McpRuntime::Docker => {
                 DockerRunner
                     .start(
+                        ctx,
                         config.package.clone(),
                         args.clone(),
                         port_bindings.clone(),

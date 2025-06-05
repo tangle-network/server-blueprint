@@ -33,6 +33,7 @@ use rmcp::{
 
 type TxStore =
     Arc<tokio::sync::RwLock<HashMap<SessionId, tokio::sync::mpsc::Sender<ClientJsonRpcMessage>>>>;
+#[allow(dead_code)]
 pub type TransportReceiver = ReceiverStream<RxJsonRpcMessage<RoleServer>>;
 
 pub type SessionId = Arc<str>;
@@ -291,6 +292,7 @@ impl SseServer {
         (server, router)
     }
 
+    #[allow(dead_code)]
     pub fn with_service<S, F>(mut self, service_provider: F) -> CancellationToken
     where
         S: Service<RoleServer>,
@@ -361,6 +363,7 @@ impl SseServer {
         ct
     }
 
+    #[allow(dead_code)]
     pub fn cancel(&self) {
         self.config.ct.cancel();
     }

@@ -15,22 +15,23 @@ use crate::transport::SseServer;
 pub struct JsRunner;
 
 impl McpRunner for JsRunner {
-    #[tracing::instrument(skip(self), fields(%package, args, port_bindings, runtime = "js"))]
+    #[tracing::instrument(skip(self, ctx), fields(%package, args, port_bindings, runtime = "js"))]
     async fn start(
         &self,
+        ctx: &crate::MyContext,
         package: String,
         args: Vec<String>,
         port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
     ) -> Result<(CancellationToken, String), Error> {
         // Ensure bun is installed
-        let mut checked = self.check().await;
+        let mut checked = self.check(ctx).await;
         blueprint_sdk::debug!(?checked, "Checking if bun is installed");
         if !matches!(checked, Ok(true)) {
             // Try to install if not present or check errored
             blueprint_sdk::debug!("Installing bun");
-            self.install().await?;
-            checked = self.check().await;
+            self.install(ctx).await?;
+            checked = self.check(ctx).await;
             if !matches!(checked, Ok(true)) {
                 blueprint_sdk::debug!(?checked, "bun install status");
                 return Err(Error::Io(std::io::Error::new(
@@ -63,7 +64,7 @@ impl McpRunner for JsRunner {
         Ok((ct, endpoint))
     }
 
-    async fn check(&self) -> Result<bool, Error> {
+    async fn check(&self, _ctx: &crate::MyContext) -> Result<bool, Error> {
         let status = Command::new("bun")
             .arg("--version")
             .stdout(std::process::Stdio::null())
@@ -74,8 +75,8 @@ impl McpRunner for JsRunner {
         Ok(status.success())
     }
 
-    #[tracing::instrument(skip(self), fields(runtime = "js"))]
-    async fn install(&self) -> Result<(), Error> {
+    #[tracing::instrument(skip(self, _ctx), fields(runtime = "js"))]
+    async fn install(&self, _ctx: &crate::MyContext) -> Result<(), Error> {
         blueprint_sdk::debug!("Installing bun");
         let output = Command::new("sh")
             .arg("-c")

@@ -2,6 +2,7 @@ use crate::manager::McpServerManager;
 use blueprint_sdk::macros::context::ServicesContext;
 use blueprint_sdk::runner::config::BlueprintEnvironment;
 use blueprint_sdk::tangle::extract::{List, Optional, TangleArg};
+use docktopus::bollard::Docker;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -63,14 +64,22 @@ pub struct MyContext {
     #[config]
     env: BlueprintEnvironment,
     pub mcp_server_manager: Arc<Mutex<McpServerManager>>,
+    pub docker: Arc<Docker>,
 }
 
 impl MyContext {
-    pub fn new(env: BlueprintEnvironment) -> Self {
-        Self {
+    pub async fn new(env: BlueprintEnvironment) -> Result<Self, error::Error> {
+        let docker_builder = docktopus::DockerBuilder::new().await.map_err(|e| {
+            crate::error::Error::Io(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("Failed to create Docker client: {}", e),
+            ))
+        })?;
+        Ok(Self {
             env,
             mcp_server_manager: Arc::new(Mutex::new(McpServerManager::default())),
-        }
+            docker: docker_builder.client(),
+        })
     }
 }
 
