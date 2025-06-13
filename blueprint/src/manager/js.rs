@@ -4,6 +4,7 @@ use std::collections::BTreeMap;
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
+use crate::SupportedTransportAdapter;
 use crate::error::Error;
 use crate::manager::McpRunner;
 use crate::transport::SseServer;
@@ -23,6 +24,7 @@ impl McpRunner for JsRunner {
         args: Vec<String>,
         port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
+        transport_adapter: SupportedTransportAdapter,
     ) -> Result<(CancellationToken, String), Error> {
         // Ensure bun is installed
         let mut checked = self.check(ctx).await;

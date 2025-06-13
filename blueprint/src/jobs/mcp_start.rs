@@ -1,4 +1,7 @@
-use blueprint_sdk::tangle::extract::{BlockHash, ServiceId, TangleArg};
+use blueprint_sdk::auth::models::ServiceOwnerModel;
+use blueprint_sdk::auth::proxy::DEFAULT_AUTH_PROXY_PORT;
+use blueprint_sdk::auth::types::KeyType;
+use blueprint_sdk::tangle::extract::{BlockHash, List, ServiceId, TangleArg};
 use blueprint_sdk::tangle::serde::from_field;
 use blueprint_sdk::tangle_subxt::tangle_testnet_runtime::api;
 use blueprint_sdk::{
@@ -14,7 +17,7 @@ pub async fn mcp_start(
     Context(ctx): Context<MyContext>,
     ServiceId(service_id): ServiceId,
     BlockHash(block_hash): BlockHash,
-    TangleArg(_): TangleArg<()>,
+    TangleArg(List(ecdsa_owner)): TangleArg<List<u8>>,
 ) -> Result<TangleResult<String>, Error> {
     let client = ctx
         .env
@@ -51,10 +54,30 @@ pub async fn mcp_start(
 
     let mut mcp_server_manager = ctx.mcp_server_manager.lock().await;
     let endpoint = mcp_server_manager
-        .start_server(&ctx, service_id, owner, config)
+        .start_server(&ctx, service_id, owner.clone(), config)
         .await?;
 
-    // TODO: register the endpoint, service id and owner in the auth proxy.
+    let bridge = ctx.env.bridge().await?;
+
+    bridge
+        .register_blueprint_service_proxy(
+            service_id,
+            Some("mcp"),
+            &endpoint,
+            &[
+                ServiceOwnerModel {
+                    key_type: KeyType::Sr25519 as _,
+                    key_bytes: owner.0.to_vec(),
+                },
+                ServiceOwnerModel {
+                    key_type: KeyType::Ecdsa as _,
+                    key_bytes: ecdsa_owner,
+                },
+            ],
+        )
+        .await?;
+
+    let endpoint = format!("http://127.0.0.1:{DEFAULT_AUTH_PROXY_PORT}");
 
     Ok(TangleResult(endpoint))
 }

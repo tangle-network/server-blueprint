@@ -16,8 +16,8 @@ use std::collections::BTreeMap;
 use blueprint_sdk::tangle_subxt::subxt::utils::AccountId32;
 use tokio_util::sync::CancellationToken;
 
-use crate::McpRuntime;
 use crate::error::Error;
+use crate::{McpRuntime, SupportedTransportAdapter};
 
 /// TBD
 pub mod docker;
@@ -69,6 +69,7 @@ pub trait McpRunner {
         args: Vec<String>,
         port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
+        transport_adapter: SupportedTransportAdapter,
     ) -> Result<(CancellationToken, String), Error>;
 
     /// Check if the runtime is installed and available
@@ -129,6 +130,7 @@ impl McpServerManager {
                         args.clone(),
                         port_bindings.clone(),
                         env_vars.clone(),
+                        config.transport_adapter,
                     )
                     .await?
             }
@@ -140,6 +142,7 @@ impl McpServerManager {
                         args.clone(),
                         port_bindings.clone(),
                         env_vars.clone(),
+                        config.transport_adapter,
                     )
                     .await?
             }
@@ -151,6 +154,7 @@ impl McpServerManager {
                         args.clone(),
                         port_bindings.clone(),
                         env_vars.clone(),
+                        config.transport_adapter,
                     )
                     .await?
             }

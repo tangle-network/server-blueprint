@@ -13,5 +13,9 @@ pub async fn mcp_stop(
 ) -> Result<TangleResult<bool>, Error> {
     let mut manager = ctx.mcp_server_manager.lock().await;
     let stopped = manager.stop_server(service_id).await?;
+    let bridge = ctx.env.bridge().await?;
+    bridge
+        .unregister_blueprint_service_proxy(service_id)
+        .await?;
     Ok(TangleResult(stopped))
 }

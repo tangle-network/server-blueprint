@@ -1,10 +1,11 @@
 use docktopus::bollard::image::{CreateImageOptions, ListImagesOptions};
 use docktopus::bollard::models::PortBinding;
-use futures::{StreamExt, TryFutureExt};
+use futures::{FutureExt, StreamExt, TryFutureExt};
 use std::collections::{BTreeMap, HashMap};
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
+use crate::SupportedTransportAdapter;
 use crate::error::Error;
 use crate::manager::McpRunner;
 use crate::transport::SseServer;
@@ -264,6 +265,7 @@ impl McpRunner for DockerRunner {
         args: Vec<String>,
         port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
+        transport_adapter: SupportedTransportAdapter,
     ) -> Result<(CancellationToken, String), Error> {
         // Ensure Docker is available
         let mut checked = self.check(ctx).await;
@@ -372,6 +374,10 @@ impl McpRunner for DockerRunner {
             let docker_client_clone = docker_client_factory.clone();
             let container_id_clone = factory_container_id.clone();
 
+            if transport_adapter.is_none() {
+                return futures::future::pending().boxed();
+            }
+
             async move {
                 // Attach to the container to get stdin/stdout streams
                 let attach_options = AttachContainerOptions::<String> {
@@ -392,9 +398,15 @@ impl McpRunner for DockerRunner {
                     )),
                 }
             }
+            .boxed()
         };
 
-        let ct = SseServer::serve(endpoint.parse()?).await?.forward(factory);
+        let ct = match transport_adapter {
+            SupportedTransportAdapter::StdioToSSE => {
+                SseServer::serve(endpoint.parse()?).await?.forward(factory)
+            }
+            SupportedTransportAdapter::None => CancellationToken::new(),
+        };
 
         // Create cleanup task that will stop the container when cancelled
         let stop_docker_client = docker_client.clone();

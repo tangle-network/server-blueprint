@@ -3,6 +3,9 @@ pub enum Error {
     /// SDK error
     #[error(transparent)]
     Sdk(#[from] blueprint_sdk::error::Error),
+    /// Bridge error
+    #[error(transparent)]
+    Bridge(#[from] blueprint_sdk::bridge::Error),
 
     #[error("Service {0} no longer exists")]
     ServiceNotFound(u64),

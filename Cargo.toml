@@ -17,7 +17,8 @@ keywords = ["tangle", "blueprint", "avs"]
 [workspace.dependencies]
 mcp-blueprint = { path = "blueprint" }
 
-blueprint-sdk = { version = "0.1.0-alpha.11", default-features = false }
+# blueprint-sdk = { version = "0.1.0-alpha.11", default-features = false }
+blueprint-sdk = { git = "https://github.com/tangle-network/blueprint.git", branch = "shady/sr25519-ctx", default-features = false }
 tokio = { version = "1", default-features = false }
 color-eyre = "0.6"
 thiserror = "2"

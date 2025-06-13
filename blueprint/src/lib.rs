@@ -50,6 +50,39 @@ pub struct McpServerConfig {
     /// Environment variables for the MCP server
     #[serde(default)]
     pub env: Optional<List<(String, String)>>,
+    /// The transport adapter to use for the MCP server
+    #[serde(default)]
+    pub transport_adapter: SupportedTransportAdapter,
+}
+
+/// The supported transport adapters for the MCP server
+#[derive(Default, Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "lowercase")]
+#[non_exhaustive]
+pub enum SupportedTransportAdapter {
+    /// Converts the MCP server's stdout and stderr to Server-Sent Events (SSE) using our built-in SSE server
+    #[default]
+    StdioToSSE,
+    /// No transport adapter, the MCP server will handle communication directly and give us a url to interact with
+    None,
+}
+
+impl SupportedTransportAdapter {
+    /// Returns `true` if the supported transport adapter is [`None`].
+    ///
+    /// [`None`]: SupportedTransportAdapter::None
+    #[must_use]
+    pub fn is_none(&self) -> bool {
+        matches!(self, Self::None)
+    }
+
+    /// Returns `true` if the supported transport adapter is [`StdioToSSE`].
+    ///
+    /// [`StdioToSSE`]: SupportedTransportAdapter::StdioToSSE
+    #[must_use]
+    pub fn is_stdio_to_sse(&self) -> bool {
+        matches!(self, Self::StdioToSSE)
+    }
 }
 
 /// The Service Request Parameters
