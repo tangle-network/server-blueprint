@@ -20,7 +20,7 @@ fn main() {
     build::soldeer_update();
     build::build_contracts(contract_dirs);
 
-    println!("cargo::rerun-if-changed=../src");
+    println!("cargo::rerun-if-changed=../blueprint/src");
 
     // The `blueprint!` macro generates the info necessary for the `blueprint.json`.
     // See its docs for all available metadata fields.

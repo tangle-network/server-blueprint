@@ -21,10 +21,9 @@ async fn main() -> color_eyre::Result<()> {
     color_eyre::install()?;
     setup_log();
 
+    let env = BlueprintEnvironment::load()?;
     blueprint_sdk::info!("Starting MCP blueprint...");
     blueprint_sdk::info!("Version: {}", env!("CARGO_PKG_VERSION"));
-
-    let env = BlueprintEnvironment::load()?;
     let sr25519_signer = env.keystore().first_local::<SpSr25519>()?;
     let sr25519_pair = env.keystore().get_secret::<SpSr25519>(&sr25519_signer)?;
     let sr25519_signer = TanglePairSigner::new(sr25519_pair.0);

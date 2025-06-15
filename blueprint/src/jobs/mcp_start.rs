@@ -62,7 +62,7 @@ pub async fn mcp_start(
     bridge
         .register_blueprint_service_proxy(
             service_id,
-            Some("mcp"),
+            Some("mcp_"),
             &endpoint,
             &[
                 ServiceOwnerModel {
