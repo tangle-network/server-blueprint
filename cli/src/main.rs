@@ -22,6 +22,7 @@ async fn main() -> color_eyre::Result<()> {
     setup_log();
 
     blueprint_sdk::info!("Starting MCP blueprint...");
+    blueprint_sdk::info!("Version: {}", env!("CARGO_PKG_VERSION"));
 
     let env = BlueprintEnvironment::load()?;
     let sr25519_signer = env.keystore().first_local::<SpSr25519>()?;

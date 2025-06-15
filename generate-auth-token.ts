@@ -56,7 +56,8 @@ const challengeResponse = (await challenge.json()) as ChallengeResponse;
 const { challenge: challengeString } = challengeResponse;
 const challengeBytes = u8aToU8a(`0x${challengeString}`);
 const signature = secp256k1Sign(challengeBytes, alice.secretKey);
-const signatureHex = u8aToHex(signature, undefined, false);
+// Notice: we only take the first 64 bytes of the signature.
+const signatureHex = u8aToHex(signature.slice(0, 64), undefined, false);
 
 interface VerifyChallengeRequest {
   pub_key: string;
@@ -71,7 +72,7 @@ const verifyRequestBody = {
   key_type: "Ecdsa",
   challenge: challengeString,
   signature: signatureHex,
-  expires_at: 0,
+  expires_at: new Date("2030-01-01T00:00:00Z").getTime(), // Example expiration date
 } satisfies VerifyChallengeRequest;
 
 const verifyChallenge = await fetch("http://localhost:8276/v1/auth/verify", {
@@ -91,7 +92,17 @@ if (!verifyChallenge.ok) {
   );
 }
 
-const verifyChallengeResponse = await verifyChallenge.json();
+type VerifyChallengeResponse = {
+  status: "Verified";
+  data: {
+    access_token: `${number}|${string}`;
+    expires_at: number;
+  };
+};
+
+const verifyChallengeResponse =
+  (await verifyChallenge.json()) as VerifyChallengeResponse;
 console.dir(verifyChallengeResponse, { depth: null });
+console.log(verifyChallengeResponse.data.access_token);
 
 export {};
