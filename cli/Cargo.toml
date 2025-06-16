@@ -1,6 +1,6 @@
 [package]
 name = "mcp-blueprint-cli"
-version = "0.1.0-prerelease.2"
+version.workspace = true
 description.workspace = true
 edition.workspace = true
 authors.workspace = true
