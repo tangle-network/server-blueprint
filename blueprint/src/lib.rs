@@ -103,8 +103,7 @@ pub struct MyContext {
 impl MyContext {
     pub async fn new(env: BlueprintEnvironment) -> Result<Self, error::Error> {
         let docker_builder = docktopus::DockerBuilder::new().await.map_err(|e| {
-            crate::error::Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            crate::error::Error::Io(std::io::Error::other(
                 format!("Failed to create Docker client: {}", e),
             ))
         })?;

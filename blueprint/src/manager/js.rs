@@ -36,8 +36,7 @@ impl McpRunner for JsRunner {
             checked = self.check(ctx).await;
             if !matches!(checked, Ok(true)) {
                 blueprint_sdk::debug!(?checked, "bun install status");
-                return Err(Error::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
+                return Err(Error::Io(std::io::Error::other(
                     "bun is not installed and could not be installed",
                 )));
             }
@@ -90,8 +89,7 @@ impl McpRunner for JsRunner {
             blueprint_sdk::debug!("bun installed successfully");
             Ok(())
         } else {
-            Err(Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            Err(Error::Io(std::io::Error::other(
                 "bun installation script failed",
             )))
         }

@@ -29,8 +29,7 @@ impl DockerRunner {
                 .to_lowercase();
             Ok(os)
         } else {
-            Err(Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            Err(Error::Io(std::io::Error::other(
                 "Failed to detect operating system",
             )))
         }
@@ -66,8 +65,7 @@ impl DockerRunner {
             .map_err(Error::Io)?;
 
         if !status.success() {
-            return Err(Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(Error::Io(std::io::Error::other(
                 "Docker installation script failed on Linux",
             )));
         }
@@ -128,8 +126,7 @@ impl DockerRunner {
             .list_images(Some(options))
             .await
             .map_err(|e| {
-                Error::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
+                Error::Io(std::io::Error::other(
                     format!("Failed to list Docker images: {}", e),
                 ))
             })?;
@@ -189,8 +186,7 @@ impl DockerRunner {
                 Ok(info) => {
                     // Check if the pull operation encountered an error
                     if let Some(error) = info.error {
-                        return Err(Error::Io(std::io::Error::new(
-                            std::io::ErrorKind::Other,
+                        return Err(Error::Io(std::io::Error::other(
                             format!("Failed to pull Docker image {}: {}", image, error),
                         )));
                     }
@@ -201,8 +197,7 @@ impl DockerRunner {
                 }
                 Err(e) => {
                     // Handle stream errors (network issues, Docker daemon problems, etc.)
-                    return Err(Error::Io(std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    return Err(Error::Io(std::io::Error::other(
                         format!("Failed to pull Docker image {}: {}", image, e),
                     )));
                 }
@@ -277,8 +272,7 @@ impl McpRunner for DockerRunner {
             checked = self.check(ctx).await;
             if !matches!(checked, Ok(true)) {
                 blueprint_sdk::debug!(?checked, "Docker install status");
-                return Err(Error::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
+                return Err(Error::Io(std::io::Error::other(
                     "Docker is not available and could not be installed",
                 )));
             }
@@ -343,8 +337,7 @@ impl McpRunner for DockerRunner {
             .create_container(None::<CreateContainerOptions<String>>, config)
             .await
             .map_err(|e| {
-                Error::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
+                Error::Io(std::io::Error::other(
                     format!("Failed to create Docker container: {}", e),
                 ))
             })?;
@@ -357,8 +350,7 @@ impl McpRunner for DockerRunner {
             .start_container(&container_id, None::<StartContainerOptions<String>>)
             .await
             .map_err(|e| {
-                Error::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
+                Error::Io(std::io::Error::other(
                     format!("Failed to start Docker container: {}", e),
                 ))
             })?;
@@ -392,8 +384,7 @@ impl McpRunner for DockerRunner {
                     .await
                 {
                     Ok(res) => Ok(DockerTransport::new(res)),
-                    Err(e) => Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
+                    Err(e) => Err(std::io::Error::other(
                         format!("Failed to attach to Docker container: {e}"),
                     )),
                 }

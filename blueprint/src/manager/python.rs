@@ -36,8 +36,7 @@ impl McpRunner for PythonRunner {
             checked = self.check(ctx).await;
             if !matches!(checked, Ok(true)) {
                 blueprint_sdk::debug!(?checked, "uv install status");
-                return Err(Error::Io(std::io::Error::new(
-                    std::io::ErrorKind::Other,
+                return Err(Error::Io(std::io::Error::other(
                     "uv is not installed and could not be installed",
                 )));
             }
@@ -89,8 +88,7 @@ impl McpRunner for PythonRunner {
             .await?;
         blueprint_sdk::debug!(?uv_install_status, "uv install status");
         if !uv_install_status.success() {
-            return Err(Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(Error::Io(std::io::Error::other(
                 "uv installation script failed",
             )));
         }
@@ -107,8 +105,7 @@ impl McpRunner for PythonRunner {
             blueprint_sdk::debug!("Python installed successfully");
             Ok(())
         } else {
-            Err(Error::Io(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            Err(Error::Io(std::io::Error::other(
                 "uv python install command failed",
             )))
         }
