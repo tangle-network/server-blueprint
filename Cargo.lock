@@ -9174,7 +9174,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-blueprint-cli"
-version = "0.1.0"
+version = "0.1.0-prerelease.2"
 dependencies = [
  "blueprint-sdk",
  "color-eyre",
