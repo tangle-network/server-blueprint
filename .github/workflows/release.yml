@@ -136,6 +136,14 @@ jobs:
         run: "forge --version"
       - name: "Install Solidity Dependencies"
         run: "forge soldeer update -d"
+      - name: "install protobuf and gmp"
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y protobuf-compiler libprotobuf-dev libgmp-dev
+      - name: "Install LLVM and Clang"
+        uses: "KyleMayes/install-llvm-action@v2"
+        with:
+          "version": "19.1.7"
       - name: Install dist
         run: ${{ matrix.install_dist.run }}
       # Get the dist-manifest
