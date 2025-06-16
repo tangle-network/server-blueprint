@@ -126,9 +126,10 @@ impl DockerRunner {
             .list_images(Some(options))
             .await
             .map_err(|e| {
-                Error::Io(std::io::Error::other(
-                    format!("Failed to list Docker images: {}", e),
-                ))
+                Error::Io(std::io::Error::other(format!(
+                    "Failed to list Docker images: {}",
+                    e
+                )))
             })?;
 
         // If any images were returned, the image exists locally
@@ -186,9 +187,10 @@ impl DockerRunner {
                 Ok(info) => {
                     // Check if the pull operation encountered an error
                     if let Some(error) = info.error {
-                        return Err(Error::Io(std::io::Error::other(
-                            format!("Failed to pull Docker image {}: {}", image, error),
-                        )));
+                        return Err(Error::Io(std::io::Error::other(format!(
+                            "Failed to pull Docker image {}: {}",
+                            image, error
+                        ))));
                     }
                     // Log progress updates for debugging and monitoring
                     if let Some(status) = info.status {
@@ -197,9 +199,10 @@ impl DockerRunner {
                 }
                 Err(e) => {
                     // Handle stream errors (network issues, Docker daemon problems, etc.)
-                    return Err(Error::Io(std::io::Error::other(
-                        format!("Failed to pull Docker image {}: {}", image, e),
-                    )));
+                    return Err(Error::Io(std::io::Error::other(format!(
+                        "Failed to pull Docker image {}: {}",
+                        image, e
+                    ))));
                 }
             }
         }
@@ -337,9 +340,10 @@ impl McpRunner for DockerRunner {
             .create_container(None::<CreateContainerOptions<String>>, config)
             .await
             .map_err(|e| {
-                Error::Io(std::io::Error::other(
-                    format!("Failed to create Docker container: {}", e),
-                ))
+                Error::Io(std::io::Error::other(format!(
+                    "Failed to create Docker container: {}",
+                    e
+                )))
             })?;
 
         let container_id = create_response.id;
@@ -350,9 +354,10 @@ impl McpRunner for DockerRunner {
             .start_container(&container_id, None::<StartContainerOptions<String>>)
             .await
             .map_err(|e| {
-                Error::Io(std::io::Error::other(
-                    format!("Failed to start Docker container: {}", e),
-                ))
+                Error::Io(std::io::Error::other(format!(
+                    "Failed to start Docker container: {}",
+                    e
+                )))
             })?;
 
         blueprint_sdk::debug!(?container_id, "Started Docker container");
@@ -384,9 +389,9 @@ impl McpRunner for DockerRunner {
                     .await
                 {
                     Ok(res) => Ok(DockerTransport::new(res)),
-                    Err(e) => Err(std::io::Error::other(
-                        format!("Failed to attach to Docker container: {e}"),
-                    )),
+                    Err(e) => Err(std::io::Error::other(format!(
+                        "Failed to attach to Docker container: {e}"
+                    ))),
                 }
             }
             .boxed()
