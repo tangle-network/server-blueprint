@@ -35,3 +35,8 @@ axum = { version = "0.8", default-features = false }
 uuid = { version = "1", default-features = false }
 docktopus = { version = "0.3.0", default-features = false }
 bytes = { version = "1", default-features = false }
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
