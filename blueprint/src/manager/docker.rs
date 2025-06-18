@@ -1,5 +1,6 @@
 use docktopus::bollard::image::{CreateImageOptions, ListImagesOptions};
 use docktopus::bollard::models::PortBinding;
+use docktopus::bollard::secret::{RestartPolicy, RestartPolicyNameEnum};
 use futures::{FutureExt, StreamExt, TryFutureExt};
 use std::collections::{BTreeMap, HashMap};
 use tokio::process::Command;
@@ -255,16 +256,16 @@ impl DockerRunner {
 }
 
 impl McpRunner for DockerRunner {
-    #[tracing::instrument(skip(self, ctx), fields(%package, args, port_bindings, runtime = "docker"))]
+    #[tracing::instrument(skip(self, ctx), fields(%package, args, service_id, env_vars, runtime = "docker"))]
     async fn start(
         &self,
         ctx: &crate::MyContext,
+        service_id: u64,
         package: String,
         args: Vec<String>,
-        port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
         transport_adapter: SupportedTransportAdapter,
-    ) -> Result<(CancellationToken, String), Error> {
+    ) -> Result<CancellationToken, Error> {
         // Ensure Docker is available
         let mut checked = self.check(ctx).await;
         blueprint_sdk::debug!(?checked, "Checking if Docker is available");
@@ -281,11 +282,10 @@ impl McpRunner for DockerRunner {
             }
         }
 
-        // Determine endpoint from first host port
-        let endpoint = port_bindings
-            .first()
-            .map(|(host_port, _)| format!("127.0.0.1:{}", host_port))
-            .ok_or_else(|| Error::MissingPortBinding)?;
+        let allocated_port = env_vars
+            .get("PORT")
+            .and_then(|p| p.parse::<u16>().ok())
+            .ok_or(Error::MissingPortBinding)?;
 
         // Use the struct's docker client
         let docker_client = ctx.docker.clone();
@@ -304,17 +304,11 @@ impl McpRunner for DockerRunner {
 
         // Configure port bindings for Docker
         let mut port_bindings_map: HashMap<String, Option<Vec<PortBinding>>> = HashMap::new();
-        for (host_port, container_port) in port_bindings {
-            let container_port_str = container_port.unwrap_or(host_port).to_string();
-            let port_binding = PortBinding {
-                host_ip: Some("127.0.0.1".to_string()),
-                host_port: Some(host_port.to_string()),
-            };
-            port_bindings_map.insert(
-                format!("{}/tcp", container_port_str),
-                Some(vec![port_binding]),
-            );
-        }
+        let port_binding = PortBinding {
+            host_ip: Some("127.0.0.1".to_string()),
+            host_port: Some(allocated_port.to_string()),
+        };
+        port_bindings_map.insert(format!("{allocated_port}/tcp"), Some(vec![port_binding]));
 
         // Convert environment variables to Vec<String> format
         let env: Vec<String> = env_vars
@@ -327,9 +321,15 @@ impl McpRunner for DockerRunner {
             image: Some(package.clone()),
             cmd: Some(args),
             env: Some(env),
+            attach_stdin: Some(true),
             attach_stdout: Some(true),
             host_config: Some(HostConfig {
                 port_bindings: Some(port_bindings_map),
+                restart_policy: Some(RestartPolicy {
+                    name: Some(RestartPolicyNameEnum::ON_FAILURE),
+                    maximum_retry_count: None,
+                }),
+                // TODO: Add more host configuration options as needed
                 ..Default::default()
             }),
             ..Default::default()
@@ -337,7 +337,13 @@ impl McpRunner for DockerRunner {
 
         // Create the container directly using bollard
         let create_response = docker_client
-            .create_container(None::<CreateContainerOptions<String>>, config)
+            .create_container(
+                Some(CreateContainerOptions {
+                    name: format!("mcp-server-{service_id}"),
+                    platform: None,
+                }),
+                config,
+            )
             .await
             .map_err(|e| {
                 Error::Io(std::io::Error::other(format!(
@@ -399,6 +405,7 @@ impl McpRunner for DockerRunner {
 
         let ct = match transport_adapter {
             SupportedTransportAdapter::StdioToSSE => {
+                let endpoint = format!("http://127.0.0.1:{allocated_port}");
                 SseServer::serve(endpoint.parse()?).await?.forward(factory)
             }
             SupportedTransportAdapter::None => CancellationToken::new(),
@@ -414,13 +421,20 @@ impl McpRunner for DockerRunner {
             blueprint_sdk::debug!(?cleanup_container_id, "Stopping Docker container");
 
             if let Err(e) = stop_docker_client
-                .stop_container(&cleanup_container_id, None::<StopContainerOptions>)
+                .stop_container(&cleanup_container_id, Some(StopContainerOptions { t: 10 }))
                 .await
             {
                 blueprint_sdk::error!(?e, ?cleanup_container_id, "Failed to stop Docker container");
             }
             if let Err(e) = stop_docker_client
-                .remove_container(&cleanup_container_id, None::<RemoveContainerOptions>)
+                .remove_container(
+                    &cleanup_container_id,
+                    Some(RemoveContainerOptions {
+                        force: true,
+                        v: true,
+                        link: true,
+                    }),
+                )
                 .await
             {
                 blueprint_sdk::error!(
@@ -431,7 +445,7 @@ impl McpRunner for DockerRunner {
             }
         });
 
-        Ok((ct, endpoint))
+        Ok(ct)
     }
 
     async fn check(&self, _ctx: &crate::MyContext) -> Result<bool, Error> {

@@ -4,7 +4,6 @@
       "runtime": "docker",
       "package": "mcp/redis",
       "args": [],
-      "portBindings": [[8000, 0]],
       "env": [
         ["REDIS_HOST", "localhost"],
         ["REDIS_PORT", "6379"]

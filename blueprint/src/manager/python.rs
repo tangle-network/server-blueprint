@@ -20,12 +20,12 @@ impl McpRunner for PythonRunner {
     async fn start(
         &self,
         ctx: &crate::MyContext,
+        service_id: u64,
         package: String,
         args: Vec<String>,
-        port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
         transport_adapter: SupportedTransportAdapter,
-    ) -> Result<(CancellationToken, String), Error> {
+    ) -> Result<CancellationToken, Error> {
         // Ensure uv is installed
         let mut checked = self.check(ctx).await;
         blueprint_sdk::debug!(?checked, "Checking if uv is installed");
@@ -42,27 +42,26 @@ impl McpRunner for PythonRunner {
             }
         }
 
-        // Determine endpoint from first host port
-        let endpoint = port_bindings
-            .first()
-            .map(|(host_port, _)| format!("http://127.0.0.1:{}", host_port))
-            .ok_or_else(|| Error::MissingPortBinding)?;
+        let allocated_port = env_vars
+            .get("PORT")
+            .and_then(|p| p.parse::<u16>().ok())
+            .ok_or(Error::MissingPortBinding)?;
+        let endpoint = format!("http://127.0.0.1:{allocated_port}");
 
         let factory = move || {
             let mut cmd = Command::new("uvx");
-            cmd.arg("run").arg(&package).arg("--");
-            for arg in &args {
-                cmd.arg(arg);
-            }
-            for (k, v) in env_vars.iter() {
-                cmd.env(k, v);
-            }
+            cmd.arg("run")
+                .arg(&package)
+                .arg("--")
+                .args(&args)
+                .envs(&env_vars)
+                .kill_on_drop(true);
             let transport = TokioChildProcess::new(&mut cmd);
             futures::future::ready(transport)
         };
 
         let ct = SseServer::serve(endpoint.parse()?).await?.forward(factory);
-        Ok((ct, endpoint))
+        Ok(ct)
     }
 
     async fn check(&self, _ctx: &crate::MyContext) -> Result<bool, Error> {

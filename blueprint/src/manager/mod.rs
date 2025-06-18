@@ -45,11 +45,6 @@ pub struct McpServer {
     /// A list of arguments to pass to the mcp server
     #[serde(default)]
     pub args: Vec<String>,
-    /// The port to bind the mcp server to
-    /// This is a list of tuples, where the first element is the host port and the second element is the
-    /// container port (if applicable)
-    #[serde(default)]
-    pub port_bindings: Vec<(u16, Option<u16>)>,
     /// Environment variables to pass to the mcp server
     #[serde(default)]
     pub env_vars: BTreeMap<String, String>,
@@ -65,12 +60,12 @@ pub trait McpRunner {
     async fn start(
         &self,
         ctx: &crate::MyContext,
+        service_id: u64,
         package: String,
         args: Vec<String>,
-        port_bindings: Vec<(u16, Option<u16>)>,
         env_vars: BTreeMap<String, String>,
         transport_adapter: SupportedTransportAdapter,
-    ) -> Result<(CancellationToken, String), Error>;
+    ) -> Result<CancellationToken, Error>;
 
     /// Check if the runtime is installed and available
     async fn check(&self, ctx: &crate::MyContext) -> Result<bool, Error>;
@@ -94,41 +89,35 @@ impl McpServerManager {
 
         let args = config.args.0.unwrap_or_default().0.clone();
 
-        let port_bindings: Vec<(u16, Option<u16>)> = config
-            .port_bindings
+        let allocated_port = ctx.next_available_port().await?;
+
+        let env_vars: BTreeMap<String, String> = config
+            .env
             .0
             .unwrap_or_default()
             .0
             .into_iter()
-            .map(|(host_port, container_port)| {
-                let container_port = if container_port == 0 {
-                    None
-                } else {
-                    Some(container_port)
-                };
-                (host_port, container_port)
-            })
+            .chain(std::iter::once((
+                "PORT".to_string(),
+                allocated_port.to_string(),
+            )))
             .collect();
-
-        let env_vars: BTreeMap<String, String> =
-            config.env.0.unwrap_or_default().0.into_iter().collect();
 
         blueprint_sdk::debug!(
             ?args,
-            ?port_bindings,
             ?env_vars,
             package = %config.package,
             runtime = ?config.runtime,
             "Starting MCP server with args"
         );
-        let (ct, endpoint) = match config.runtime {
+        let ct = match config.runtime {
             crate::McpRuntime::Python => {
                 PythonRunner
                     .start(
                         ctx,
+                        service_id,
                         config.package.clone(),
                         args.clone(),
-                        port_bindings.clone(),
                         env_vars.clone(),
                         config.transport_adapter,
                     )
@@ -138,9 +127,9 @@ impl McpServerManager {
                 JsRunner
                     .start(
                         ctx,
+                        service_id,
                         config.package.clone(),
                         args.clone(),
-                        port_bindings.clone(),
                         env_vars.clone(),
                         config.transport_adapter,
                     )
@@ -150,9 +139,9 @@ impl McpServerManager {
                 DockerRunner
                     .start(
                         ctx,
+                        service_id,
                         config.package.clone(),
                         args.clone(),
-                        port_bindings.clone(),
                         env_vars.clone(),
                         config.transport_adapter,
                     )
@@ -166,10 +155,10 @@ impl McpServerManager {
             runtime: config.runtime,
             package: config.package,
             args,
-            port_bindings,
             env_vars,
             cancellation_token: Some(ct),
         };
+        let endpoint = format!("http://127.0.0.1:{allocated_port}");
         self.servers.insert(service_id, server);
         self.owners.insert(service_id, owner);
         self.endpoints.insert(service_id, endpoint.clone());

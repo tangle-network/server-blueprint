@@ -38,16 +38,15 @@ pub struct McpServerConfig {
     /// The different runtimes that can be used to run the mcp server
     pub runtime: McpRuntime,
     /// The package to use for the mcp server or the docker image
+    ///
+    /// Example: `mcp-server@x.y.z` for Python or JS, or `mcp-server:latest` for Docker
     pub package: String,
     /// A list of arguments to pass to the mcp server
+    /// This is optional and can be empty
     #[serde(default)]
     pub args: Optional<List<String>>,
-    /// The port to bind the mcp server to
-    /// This is a list of tuples, where the first element is the host port and the second element is the
-    /// container port (if applicable)
-    #[serde(default)]
-    pub port_bindings: Optional<List<(u16, u16)>>,
     /// Environment variables for the MCP server
+    /// This is optional and can be empty
     #[serde(default)]
     pub env: Optional<List<(String, String)>>,
     /// The transport adapter to use for the MCP server
@@ -113,6 +112,50 @@ impl MyContext {
             mcp_server_manager: Arc::new(Mutex::new(McpServerManager::default())),
             docker: docker_builder.client(),
         })
+    }
+    /// Finds the next available port by binding to localhost:0 and retrieving the assigned port.
+    ///
+    /// This function uses the OS's ability to assign an available port when binding to port 0.
+    /// The TCP listener is immediately closed after retrieving the port number.
+    ///
+    /// # Important: Race Condition Warning
+    ///
+    /// There is an inherent race condition in this approach: between the time the port is
+    /// released (when the listener is dropped) and when the caller attempts to use the port,
+    /// another process may bind to the same port. This is a fundamental limitation of this
+    /// approach and should be considered when using this function, but this scenario is
+    /// unlikely in practice for most applications.
+    ///
+    /// For critical applications, consider keeping the listener alive and passing it to the
+    /// caller, or using a more sophisticated port management strategy.
+    ///
+    /// # Returns
+    ///
+    /// Returns the port number that was available at the time of testing.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - Unable to bind to localhost (network issues, permission problems)
+    /// - Unable to retrieve the local address from the bound socket
+    pub async fn next_available_port(&self) -> Result<u16, error::Error> {
+        let tcp = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0))
+            .await
+            .map_err(|e| {
+                error::Error::Io(std::io::Error::other(format!(
+                    "Failed to bind TCP listener: {}",
+                    e
+                )))
+            })?;
+        let local_addr = tcp.local_addr().map_err(|e| {
+            error::Error::Io(std::io::Error::other(format!(
+                "Failed to get local address: {}",
+                e
+            )))
+        })?;
+        // Close the listener immediately after getting the port
+        drop(tcp);
+        Ok(local_addr.port())
     }
 }
 
