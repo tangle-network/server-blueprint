@@ -10,15 +10,13 @@ flowchart TD
     C --> D{Configuration Contains}
     D --> D1[Runtime: Python/JavaScript/Docker]
     D --> D2[Package Name/Docker Image]
-    D --> D3[Port Bindings]
-    D --> D4[Environment Variables]
-    D --> D5[Custom Arguments]
+    D --> D3[Environment Variables]
+    D --> D4[Custom Arguments]
 
     D1 --> E[Blueprint Receives Configuration]
     D2 --> E
     D3 --> E
     D4 --> E
-    D5 --> E
 
     E --> F{Blueprint Job Type}
     F -->|Start Job| G[mcp_start Job Handler]
@@ -26,7 +24,9 @@ flowchart TD
 
     G --> G1[Extract Service Instance from Tangle]
     G1 --> G2[Get Configuration from Request Args]
-    G2 --> G3[Determine Runtime and Package]
+    G2 --> G2A[Automatically Allocate Available Port]
+    G2A --> G2B[Inject PORT Environment Variable]
+    G2B --> G3[Determine Runtime and Package]
 
     G3 --> I{Runtime Detection}
     I -->|Python| J[Python Runner - uvx]
@@ -55,9 +55,9 @@ flowchart TD
     L1 -->|Yes| L3[Check if image exists locally]
     L2 --> L3
     L3 -->|No| L4[Pull Docker image from registry]
-    L3 -->|Yes| L5[Create container with port bindings]
+    L3 -->|Yes| L5[Create container with automatic port binding]
     L4 --> L5
-    L5 --> L6[Start Docker container]
+    L5 --> L6[Start Docker container with PORT env var]
     L6 --> L7[Attach to container streams]
     L7 --> L8[Create DockerTransport]
 
@@ -67,7 +67,7 @@ flowchart TD
     L8 --> M
 
     M --> N[SseServer.serve - Create HTTP Server]
-    N --> N1[Bind to endpoint address]
+    N --> N1[Bind to allocated port address]
     N1 --> N2[Setup SSE handler at /sse]
     N2 --> N3[Setup POST handler at /message]
     N3 --> N4[Forward STDIO transport to SSE transport]
@@ -121,7 +121,8 @@ flowchart TD
 ### 1. **User Request Flow**
 
 - Users request a service instance with MCP configuration
-- Configuration includes runtime type, package/image, ports, environment variables, and arguments
+- Configuration includes runtime type, package/image, environment variables, and arguments
+- Port allocation is handled automatically by the blueprint
 
 ### 2. **Blueprint Jobs**
 
@@ -130,9 +131,9 @@ flowchart TD
 
 ### 3. **Runtime Support**
 
-- **Python**: Uses `uv`/`uvx` for package management and execution
-- **JavaScript**: Uses `bun`/`bunx` for package management and execution
-- **Docker**: Uses Docker containers with port bindings and environment variables
+- **Python**: Uses `uv`/`uvx` for package management and execution with automatic `PORT` environment variable
+- **JavaScript**: Uses `bun`/`bunx` for package management and execution with automatic `PORT` environment variable
+- **Docker**: Uses Docker containers with automatic port binding and `PORT` environment variable injection
 
 ### 4. **Transport Conversion**
 
@@ -145,6 +146,21 @@ flowchart TD
 - Provides HTTP URL for MCP client connections
 - SSE endpoint for real-time message streaming
 - POST endpoint for client message submission
+- Automatic port allocation eliminates manual port configuration
+
+## Breaking Changes
+
+**⚠️ Important**: Recent updates introduce automatic port management:
+
+- **Removed**: Manual port binding configuration from user requests
+- **Added**: Automatic port allocation with `PORT` environment variable injection
+- **Required**: MCP servers must read port from the `PORT` environment variable
+
+### Migration Impact:
+
+- Configuration files no longer need `portBindings` field
+- MCP servers **must** bind to the port specified in `process.env.PORT` (JS) or `os.environ['PORT']` (Python)
+- Docker containers **must** expose and bind to `$PORT`
 
 ## Example Configurations
 
@@ -153,3 +169,6 @@ The project includes sample configurations in the `fixtures/` directory:
 - **Python MCP**: [`fixtures/00_mcp_python3.json`](fixtures/00_mcp_python3.json)
 - **JavaScript MCP**: [`fixtures/01_mcp_js.json`](fixtures/01_mcp_js.json)
 - **Docker MCP**: [`fixtures/02_mcp_local_docker.json`](fixtures/02_mcp_local_docker.json)
+- **Tangle Docker MCP**: [`fixtures/03_tangle_mcp_docker.json`](fixtures/03_tangle_mcp_docker.json)
+
+> **Note**: All sample configurations have been updated to remove `portBindings`. Port allocation is now handled automatically by the blueprint system.

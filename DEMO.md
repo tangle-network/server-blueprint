@@ -14,13 +14,14 @@ RUST_LOG=blueprint-rejection=trace,tangle-producer=debug,tangle-consumer=trace,b
       "runtime": "docker",
       "package": "tangle-mcp:0.1.0",
       "args": [],
-      "portBindings": [[3000, 3000]],
       "env": [],
       "transportAdapter": "none"
     }
   }
 ]
 ```
+
+> **Note**: Port binding is now handled automatically by the blueprint. The MCP server will receive a `PORT` environment variable and must bind to that port.
 
 ```shell
 cargo tangle blueprint request-service --blueprint-id 0 --keystore-uri ./target/keystore --value 0 --target-operators 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY --params-file ./fixtures/03_tangle_mcp_docker.json
@@ -55,4 +56,4 @@ Once the token is generated, you can use it to access the MCP server.
 npx -y @modelcontextprotocol/inspector
 ```
 
-Choose the `SSE` transport and enter the MCP server URL you got from the job output + `/see`. Then, enter the generated access token in the Authorization header.
+Choose the `SSE` transport and enter the MCP server URL you got from the job output + `/sse`. Then, enter the generated access token in the Authorization header.
