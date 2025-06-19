@@ -55,16 +55,22 @@ flowchart TD
     L1 -->|Yes| L3[Check if image exists locally]
     L2 --> L3
     L3 -->|No| L4[Pull Docker image from registry]
-    L3 -->|Yes| L5[Create container with automatic port binding]
+    L3 -->|Yes| L5[Inspect image for exposed ports]
     L4 --> L5
-    L5 --> L6[Start Docker container with PORT env var]
-    L6 --> L7[Attach to container streams]
-    L7 --> L8[Create DockerTransport]
+    L5 --> L5A{Image exposes ports?}
+    L5A -->|Yes| L6[Configure port binding: host port → container port]
+    L5A -->|No| L6B[Skip port mapping configuration]
+    L6 --> L7[Set PORT env var to container's exposed port]
+    L6B --> L7B[Create container without port bindings]
+    L7 --> L8[Start Docker container]
+    L7B --> L8
+    L8 --> L9[Attach to container streams]
+    L9 --> L10[Create DockerTransport]
 
     %% Transport Conversion
     J5 --> M[Transport Conversion: STDIO to SSE]
     K5 --> M
-    L8 --> M
+    L10 --> M
 
     M --> N[SseServer.serve - Create HTTP Server]
     N --> N1[Bind to allocated port address]
@@ -111,8 +117,8 @@ flowchart TD
 
     class A,B,R,R1,R2,R3,R4 userAction
     class E,F,G,G1,G2,G3,H,H1,H2,H3,H7,H8,Q,Q1,Q2,Q3 blueprintCore
-    class I,J,J1,J2,J3,J4,K,K1,K2,K3,K4,L,L1,L2,L3,L4,L5,L6,L7,H4,H5,H6 runtime
-    class J5,K5,L8,M,N,N1,N2,N3,N4 transport
+    class I,J,J1,J2,J3,J4,K,K1,K2,K3,K4,L,L1,L2,L3,L4,L5,L5A,L6,L6B,L7,L7B,L8,L9,H4,H5,H6 runtime
+    class J5,K5,L10,M,N,N1,N2,N3,N4 transport
     class O,P,P1,R5,R6 endpoint
 ```
 
@@ -133,7 +139,7 @@ flowchart TD
 
 - **Python**: Uses `uv`/`uvx` for package management and execution with automatic `PORT` environment variable
 - **JavaScript**: Uses `bun`/`bunx` for package management and execution with automatic `PORT` environment variable
-- **Docker**: Uses Docker containers with automatic port binding and `PORT` environment variable injection
+- **Docker**: Uses Docker containers with intelligent port discovery, automatic port binding (when needed), and `PORT` environment variable injection
 
 ### 4. **Transport Conversion**
 
@@ -147,6 +153,29 @@ flowchart TD
 - SSE endpoint for real-time message streaming
 - POST endpoint for client message submission
 - Automatic port allocation eliminates manual port configuration
+- Docker images are automatically inspected for exposed ports to optimize port mapping
+
+## 🔄 Docker Port Discovery Enhancement
+
+**New in this version**: The Docker runtime now intelligently discovers exposed ports from Docker images:
+
+1. **Image Inspection**: The `get_exposed_ports()` method inspects Docker images using the Docker daemon API
+2. **Smart Port Mapping**: Port bindings are only configured when the image actually exposes ports
+3. **Container-Aware Environment**: The `PORT` environment variable is set to the container's internal exposed port
+4. **Fallback Handling**: Images without exposed ports skip port mapping entirely
+
+### Impact on MCP Developers:
+
+- **Docker Images**: Ensure your MCP server Docker images use `EXPOSE` instructions for ports they bind to
+- **No Exposed Ports**: If your Docker image doesn't expose ports, no port mapping will be configured
+- **Port Environment**: Your containerized MCP server should read the port from `$PORT` environment variable
+- **Example Dockerfile**:
+  ```dockerfile
+  # This EXPOSE instruction will be automatically discovered
+  EXPOSE 8080
+  # Your app should bind to the PORT environment variable
+  CMD ["./your-mcp-server", "--port", "$PORT"]
+  ```
 
 ## Breaking Changes
 

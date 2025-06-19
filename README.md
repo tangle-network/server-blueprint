@@ -16,7 +16,7 @@ The blueprint supports configurations for various runtimes with automatic port m
 
 - **STDIO transport in JavaScript (bun runtime)**: Executes MCP servers using `bunx` with automatic bun installation if needed
 - **STDIO transport in Python (python3)**: Executes MCP servers using `uvx` with automatic uv installation if needed
-- **Docker containers**: Runs MCP servers in Docker containers with automatic port allocation and environment variable injection
+- **Docker containers**: Runs MCP servers in Docker containers with intelligent port discovery, automatic port allocation, and environment variable injection
 
 ### Port Management & Transport Conversion
 
@@ -103,7 +103,7 @@ The blueprint process follows this high-level workflow:
 4. **Runtime Initialization**:
    - **Python**: Installs/uses `uv` for package management and execution
    - **JavaScript**: Installs/uses `bun` for package management and execution
-   - **Docker**: Pulls images and creates containers with automatic port binding
+   - **Docker**: Pulls images, inspects for exposed ports, and creates containers with intelligent port binding
 5. **Transport Setup**: Converts STDIO communication to SSE for HTTP compatibility
 6. **Endpoint Exposure**: Provides HTTP URL with `/sse` and `/message` endpoints
 7. **Authentication**: Secures access through token-based authentication system
@@ -135,6 +135,7 @@ cargo install cargo-tangle --git https://github.com/tangle-network/blueprint
 - **Conflict Prevention**: Automatic port allocation prevents port conflicts
 - **Environment Injection**: `PORT` environment variable automatically provided to MCP servers
 - **Universal Compatibility**: Works across all runtime types (Python, JavaScript, Docker)
+- **Intelligent Docker Handling**: Automatically discovers exposed ports from Docker images and configures port mapping only when needed
 
 ### Enhanced Security & Reliability
 

@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic `PORT` environment variable injection for all MCP servers
 - Enhanced Docker container management with proper naming and restart policies
 - Improved error handling for port allocation failures
+- **NEW**: Docker image port discovery via `get_exposed_ports()` method
+- **NEW**: Intelligent Docker port mapping that only configures bindings when images expose ports
+- **NEW**: Enhanced Docker container `PORT` environment variable handling with container-internal port mapping
 
 ### Changed
 
@@ -114,13 +117,16 @@ CMD ["your-app", "--port", "$PORT"]
 
 #### Docker Runtime
 
-- The blueprint automatically sets the `PORT` environment variable
-- The blueprint handles port binding from host to container automatically
+- The blueprint automatically discovers exposed ports from your Docker image
+- The blueprint sets the `PORT` environment variable to the container's internal exposed port
+- The blueprint handles port binding from host to container automatically (only if ports are exposed)
 - Your Docker container should expose and bind to the port from `$PORT`
+- If no ports are exposed in your Docker image, no port mapping is configured
 - Example Dockerfile:
   ```dockerfile
+  # The blueprint will discover this exposed port automatically
+  EXPOSE 8000
   ENV PORT=8000
-  EXPOSE $PORT
   CMD ["python", "app.py", "--port", "$PORT"]
   ```
 
@@ -131,6 +137,8 @@ CMD ["your-app", "--port", "$PORT"]
 3. **Improved Security**: Reduced surface area for configuration errors
 4. **Better Resource Management**: Automatic cleanup and proper container lifecycle management
 5. **Standardized Interface**: All MCP servers follow the same port configuration pattern
+6. **Intelligent Docker Handling**: Automatic port discovery reduces configuration overhead and improves compatibility
+7. **Flexible Port Mapping**: Only configures port bindings when Docker images actually expose ports
 
 ## Upgrading Your MCP Server
 
