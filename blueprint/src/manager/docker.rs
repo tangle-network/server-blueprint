@@ -253,6 +253,57 @@ impl DockerRunner {
         }
         Ok(())
     }
+
+    /// Inspect a Docker image and extract exposed ports
+    ///
+    /// This method queries the Docker daemon to get the image configuration
+    /// and extracts the ports that the image exposes via EXPOSE instructions.
+    ///
+    /// # Arguments
+    /// * `docker_client` - A reference to the bollard Docker client
+    /// * `image` - The Docker image name/tag to inspect
+    ///
+    /// # Returns
+    /// * `Ok(Vec<u16>)` - List of exposed ports (empty if no ports exposed)
+    /// * `Err(Error)` - If there was an error inspecting the image
+    #[tracing::instrument(skip(self, docker_client))]
+    async fn get_exposed_ports(
+        &self,
+        docker_client: &docktopus::bollard::Docker,
+        image: &str,
+    ) -> Result<Vec<u16>, Error> {
+        blueprint_sdk::debug!(?image, "Inspecting Docker image for exposed ports");
+
+        // Inspect the image to get its configuration
+        let image_info = docker_client.inspect_image(image).await.map_err(|e| {
+            Error::Io(std::io::Error::other(format!(
+                "Failed to inspect Docker image {}: {}",
+                image, e
+            )))
+        })?;
+
+        let mut exposed_ports = Vec::new();
+
+        // Extract exposed ports from image config
+        if let Some(config) = image_info.config {
+            if let Some(exposed_ports_map) = config.exposed_ports {
+                for port_spec in exposed_ports_map.keys() {
+                    // Port specs are in format "3000/tcp" or "8080/udp"
+                    if let Some(port_str) = port_spec.split('/').next() {
+                        if let Ok(port) = port_str.parse::<u16>() {
+                            exposed_ports.push(port);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort ports for consistent behavior
+        exposed_ports.sort();
+
+        blueprint_sdk::debug!(?exposed_ports, "Discovered exposed ports from image");
+        Ok(exposed_ports)
+    }
 }
 
 impl McpRunner for DockerRunner {
@@ -263,7 +314,7 @@ impl McpRunner for DockerRunner {
         service_id: u64,
         package: String,
         args: Vec<String>,
-        env_vars: BTreeMap<String, String>,
+        mut env_vars: BTreeMap<String, String>,
         transport_adapter: SupportedTransportAdapter,
     ) -> Result<CancellationToken, Error> {
         // Ensure Docker is available
@@ -283,7 +334,7 @@ impl McpRunner for DockerRunner {
         }
 
         let allocated_port = env_vars
-            .get("PORT")
+            .remove("PORT")
             .and_then(|p| p.parse::<u16>().ok())
             .ok_or(Error::MissingPortBinding)?;
 
@@ -294,6 +345,9 @@ impl McpRunner for DockerRunner {
         self.ensure_image_available(&docker_client, &package)
             .await?;
 
+        // Discover exposed ports from the image
+        let exposed_ports = self.get_exposed_ports(&docker_client, &package).await?;
+
         // Since docktopus v0.3.0 doesn't support port bindings in Container API,
         // we need to create the container manually using bollard Config
         use docktopus::bollard::container::{
@@ -302,13 +356,23 @@ impl McpRunner for DockerRunner {
         };
         use docktopus::bollard::models::HostConfig;
 
-        // Configure port bindings for Docker
-        let mut port_bindings_map: HashMap<String, Option<Vec<PortBinding>>> = HashMap::new();
-        let port_binding = PortBinding {
-            host_ip: Some("127.0.0.1".to_string()),
-            host_port: Some(allocated_port.to_string()),
+        // Only configure port bindings if the image exposes ports
+        let port_bindings_map = if let Some(&container_port) = exposed_ports.first() {
+            blueprint_sdk::debug!(%container_port, %allocated_port, "Configuring port mapping");
+            // Set the PORT environment variable for the container that will be used by the MCP server
+            env_vars.insert("PORT".to_string(), container_port.to_string());
+
+            let mut port_bindings_map: HashMap<String, Option<Vec<PortBinding>>> = HashMap::new();
+            let port_binding = PortBinding {
+                host_ip: Some("127.0.0.1".to_string()),
+                host_port: Some(allocated_port.to_string()),
+            };
+            port_bindings_map.insert(format!("{container_port}/tcp"), Some(vec![port_binding]));
+            Some(port_bindings_map)
+        } else {
+            blueprint_sdk::debug!(?package, "No exposed ports found, skipping port mapping");
+            None
         };
-        port_bindings_map.insert(format!("{allocated_port}/tcp"), Some(vec![port_binding]));
 
         // Convert environment variables to Vec<String> format
         let env: Vec<String> = env_vars
@@ -324,7 +388,7 @@ impl McpRunner for DockerRunner {
             attach_stdin: Some(true),
             attach_stdout: Some(true),
             host_config: Some(HostConfig {
-                port_bindings: Some(port_bindings_map),
+                port_bindings: port_bindings_map,
                 restart_policy: Some(RestartPolicy {
                     name: Some(RestartPolicyNameEnum::ON_FAILURE),
                     maximum_retry_count: None,
@@ -432,7 +496,7 @@ impl McpRunner for DockerRunner {
                     Some(RemoveContainerOptions {
                         force: true,
                         v: true,
-                        link: true,
+                        link: false,
                     }),
                 )
                 .await
