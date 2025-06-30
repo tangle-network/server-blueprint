@@ -9209,7 +9209,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-blueprint"
-version = "0.2.0-prerelease.1"
+version = "0.2.0-prerelease.2"
 dependencies = [
  "axum",
  "blueprint-sdk",
@@ -9230,7 +9230,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-blueprint-cli"
-version = "0.2.0-prerelease.1"
+version = "0.2.0-prerelease.2"
 dependencies = [
  "blueprint-sdk",
  "color-eyre",
