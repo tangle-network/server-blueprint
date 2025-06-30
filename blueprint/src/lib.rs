@@ -103,8 +103,7 @@ impl MyContext {
     pub async fn new(env: BlueprintEnvironment) -> Result<Self, error::Error> {
         let docker_builder = docktopus::DockerBuilder::new().await.map_err(|e| {
             crate::error::Error::Io(std::io::Error::other(format!(
-                "Failed to create Docker client: {}",
-                e
+                "Failed to create Docker client: {e}"
             )))
         })?;
         Ok(Self {
@@ -143,14 +142,12 @@ impl MyContext {
             .await
             .map_err(|e| {
                 error::Error::Io(std::io::Error::other(format!(
-                    "Failed to bind TCP listener: {}",
-                    e
+                    "Failed to bind TCP listener: {e}"
                 )))
             })?;
         let local_addr = tcp.local_addr().map_err(|e| {
             error::Error::Io(std::io::Error::other(format!(
-                "Failed to get local address: {}",
-                e
+                "Failed to get local address: {e}"
             )))
         })?;
         // Close the listener immediately after getting the port

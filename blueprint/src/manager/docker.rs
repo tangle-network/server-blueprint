@@ -46,8 +46,7 @@ impl DockerRunner {
             _ => Err(Error::Io(std::io::Error::new(
                 std::io::ErrorKind::Unsupported,
                 format!(
-                    "Docker installation only supported on Linux, detected platform: {}",
-                    os
+                    "Docker installation only supported on Linux, detected platform: {os}"
                 ),
             ))),
         }
@@ -128,8 +127,7 @@ impl DockerRunner {
             .await
             .map_err(|e| {
                 Error::Io(std::io::Error::other(format!(
-                    "Failed to list Docker images: {}",
-                    e
+                    "Failed to list Docker images: {e}"
                 )))
             })?;
 
@@ -189,8 +187,7 @@ impl DockerRunner {
                     // Check if the pull operation encountered an error
                     if let Some(error) = info.error {
                         return Err(Error::Io(std::io::Error::other(format!(
-                            "Failed to pull Docker image {}: {}",
-                            image, error
+                            "Failed to pull Docker image {image}: {error}"
                         ))));
                     }
                     // Log progress updates for debugging and monitoring
@@ -201,8 +198,7 @@ impl DockerRunner {
                 Err(e) => {
                     // Handle stream errors (network issues, Docker daemon problems, etc.)
                     return Err(Error::Io(std::io::Error::other(format!(
-                        "Failed to pull Docker image {}: {}",
-                        image, e
+                        "Failed to pull Docker image {image}: {e}"
                     ))));
                 }
             }
@@ -277,8 +273,7 @@ impl DockerRunner {
         // Inspect the image to get its configuration
         let image_info = docker_client.inspect_image(image).await.map_err(|e| {
             Error::Io(std::io::Error::other(format!(
-                "Failed to inspect Docker image {}: {}",
-                image, e
+                "Failed to inspect Docker image {image}: {e}"
             )))
         })?;
 
@@ -377,7 +372,7 @@ impl McpRunner for DockerRunner {
         // Convert environment variables to Vec<String> format
         let env: Vec<String> = env_vars
             .iter()
-            .map(|(k, v)| format!("{}={}", k, v))
+            .map(|(k, v)| format!("{k}={v}"))
             .collect();
 
         // Create container configuration with port bindings
@@ -411,8 +406,7 @@ impl McpRunner for DockerRunner {
             .await
             .map_err(|e| {
                 Error::Io(std::io::Error::other(format!(
-                    "Failed to create Docker container: {}",
-                    e
+                    "Failed to create Docker container: {e}"
                 )))
             })?;
 
@@ -425,8 +419,7 @@ impl McpRunner for DockerRunner {
             .await
             .map_err(|e| {
                 Error::Io(std::io::Error::other(format!(
-                    "Failed to start Docker container: {}",
-                    e
+                    "Failed to start Docker container: {e}"
                 )))
             })?;
 
