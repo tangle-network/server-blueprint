@@ -8,7 +8,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::SupportedTransportAdapter;
 use crate::error::Error;
-use crate::manager::McpRunner;
+use crate::manager::ServerRunner;
 use crate::transport::SseServer;
 
 /// Docker runner
@@ -301,7 +301,7 @@ impl DockerRunner {
     }
 }
 
-impl McpRunner for DockerRunner {
+impl ServerRunner for DockerRunner {
     #[tracing::instrument(skip(self, ctx), fields(%package, args, service_id, env_vars, runtime = "docker"))]
     async fn start(
         &self,

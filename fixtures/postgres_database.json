@@ -1,0 +1,15 @@
+[
+  {
+    "config": {
+      "runtime": "docker",
+      "package": "postgres:15-alpine",
+      "args": [],
+      "env": [
+        ["POSTGRES_DB", "myapp"],
+        ["POSTGRES_USER", "admin"],
+        ["POSTGRES_PASSWORD", "secretpassword"]
+      ],
+      "transportAdapter": "none"
+    }
+  }
+]

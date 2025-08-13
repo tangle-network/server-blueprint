@@ -1,0 +1,11 @@
+[
+  {
+    "config": {
+      "runtime": "docker",
+      "package": "httpd:2.4-alpine",
+      "args": [],
+      "env": [],
+      "transportAdapter": "none"
+    }
+  }
+]

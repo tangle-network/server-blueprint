@@ -5,13 +5,13 @@ use blueprint_sdk::tangle::extract::{ServiceId, TangleArg};
 use crate::MyContext;
 use crate::error::Error;
 
-/// Stop the configured MCP server
-pub async fn mcp_stop(
+/// Stop the configured server
+pub async fn server_stop(
     Context(ctx): Context<MyContext>,
     ServiceId(service_id): ServiceId,
     TangleArg(_): TangleArg<()>,
 ) -> Result<TangleResult<bool>, Error> {
-    let mut manager = ctx.mcp_server_manager.lock().await;
+    let mut manager = ctx.server_manager.lock().await;
     let stopped = manager.stop_server(service_id).await?;
     let bridge = ctx.env.bridge().await?;
     bridge

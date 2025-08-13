@@ -4,18 +4,18 @@ members = ["blueprint", "cli"]
 
 [workspace.package]
 version = "0.2.0-prerelease.3"
-description = "Convert any MCP server to a blueprint in seconds"
+description = "Deploy any HTTP server or database as a blueprint in seconds"
 edition = "2024"
 authors = ["Shady Khalifa <dev+github@shadykhalifa.me>"]
 license = "MIT OR Apache-2.0"
 homepage = "https://tangle.network"
-repository = "https://github.com/tangle-network/mcp-blueprint"
+repository = "https://github.com/tangle-network/server-blueprint"
 readme = "README.md"
-categories = ["cryptography", "cryptography::cryptocurrencies"]
-keywords = ["tangle", "blueprint", "avs"]
+categories = ["cryptography", "cryptography::cryptocurrencies", "web-programming::http-server"]
+keywords = ["tangle", "blueprint", "avs", "server", "docker"]
 
 [workspace.dependencies]
-mcp-blueprint = { path = "blueprint" }
+server-blueprint = { path = "blueprint" }
 
 # blueprint-sdk = { version = "0.1.0-alpha.11", default-features = false }
 blueprint-sdk = { git = "https://github.com/tangle-network/blueprint.git", branch = "main", default-features = false }

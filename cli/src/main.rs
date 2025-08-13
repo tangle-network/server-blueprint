@@ -11,7 +11,7 @@ use blueprint_sdk::tangle::consumer::TangleConsumer;
 use blueprint_sdk::tangle::filters::MatchesServiceId;
 use blueprint_sdk::tangle::layers::TangleLayer;
 use blueprint_sdk::tangle::producer::TangleProducer;
-use mcp_blueprint::{MCP_START_JOB_ID, MCP_STOP_JOB_ID, MyContext, mcp_start, mcp_stop};
+use server_blueprint::{SERVER_START_JOB_ID, SERVER_STOP_JOB_ID, MyContext, server_start, server_stop};
 use tower::filter::FilterLayer;
 use tracing::error;
 use tracing::level_filters::LevelFilter;
@@ -22,7 +22,7 @@ async fn main() -> color_eyre::Result<()> {
     setup_log();
 
     let env = BlueprintEnvironment::load()?;
-    blueprint_sdk::info!("Starting MCP blueprint...");
+    blueprint_sdk::info!("Starting server blueprint...");
     blueprint_sdk::info!("Version: {}", env!("CARGO_PKG_VERSION"));
     let sr25519_signer = env.keystore().first_local::<SpSr25519>()?;
     let sr25519_pair = env.keystore().get_secret::<SpSr25519>(&sr25519_signer)?;
@@ -40,8 +40,8 @@ async fn main() -> color_eyre::Result<()> {
     let result = BlueprintRunner::builder(tangle_config, env.clone())
         .router(
             Router::new()
-                .route(MCP_START_JOB_ID, mcp_start.layer(TangleLayer))
-                .route(MCP_STOP_JOB_ID, mcp_stop.layer(TangleLayer))
+                .route(SERVER_START_JOB_ID, server_start.layer(TangleLayer))
+                .route(SERVER_STOP_JOB_ID, server_stop.layer(TangleLayer))
                 .layer(FilterLayer::new(MatchesServiceId(service_id)))
                 .with_context(ctx),
         )

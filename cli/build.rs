@@ -1,7 +1,7 @@
-use blueprint_sdk::build;
+// use blueprint_sdk::build;
 use blueprint_sdk::tangle::blueprint;
-use mcp_blueprint::mcp_start;
-use mcp_blueprint::{BlueprintRequestParams, mcp_stop};
+use server_blueprint::server_start;
+use server_blueprint::{BlueprintRequestParams, server_stop};
 use std::path::Path;
 use std::process;
 
@@ -10,25 +10,26 @@ fn main() {
     //
     // Note that this is provided for convenience, and is not necessary if you wish to handle the
     // contract build step yourself.
-    let contracts_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .unwrap()
-        .join("contracts");
-
-    let contract_dirs: Vec<&str> = vec![contracts_dir.to_str().unwrap()];
-    build::soldeer_install();
-    build::soldeer_update();
-    build::build_contracts(contract_dirs);
+    // Temporarily skip contract building
+    // let contracts_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+    //     .parent()
+    //     .unwrap()
+    //     .join("contracts");
+    // 
+    // let contract_dirs: Vec<&str> = vec![contracts_dir.to_str().unwrap()];
+    // build::soldeer_install();
+    // build::soldeer_update();
+    // build::build_contracts(contract_dirs);
 
     println!("cargo::rerun-if-changed=../blueprint/src");
 
     // The `blueprint!` macro generates the info necessary for the `blueprint.json`.
     // See its docs for all available metadata fields.
     let blueprint = blueprint! {
-        name: "mcp-blueprint",
+        name: "server-blueprint",
         master_manager_revision: "Latest",
         manager: { Evm = "HelloBlueprint" },
-        jobs: [mcp_start, mcp_stop],
+        jobs: [server_start, server_stop],
         request_params: BlueprintRequestParams,
     };
 

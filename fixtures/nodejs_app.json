@@ -1,0 +1,13 @@
+[
+  {
+    "config": {
+      "runtime": "docker",
+      "package": "node:18-alpine",
+      "args": ["node", "server.js"],
+      "env": [
+        ["NODE_ENV", "production"]
+      ],
+      "transportAdapter": "none"
+    }
+  }
+]

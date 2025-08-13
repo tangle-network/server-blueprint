@@ -2,7 +2,7 @@
 2. Spawn the blueprint using the tangle CLI:
 
 ```shell
-RUST_LOG=blueprint-rejection=trace,tangle-producer=debug,tangle-consumer=trace,blueprint-router=trace,blueprint-runner=trace,blueprint_manager=debug,blueprint_manager_bridge=debug,blueprint_auth=debug,axum=debug,mcp_blueprint=debug,mcp_blueprint_cli=debug cargo tangle debug spawn --no-vm -p mcp-blueprint --binary ./target/debug/mcp-blueprint-cli 0 0 --http-rpc-url http://localhost:9944 --ws-rpc-url ws://localhost:9944
+RUST_LOG=blueprint-rejection=trace,tangle-producer=debug,tangle-consumer=trace,blueprint-router=trace,blueprint-runner=trace,blueprint_manager=debug,blueprint_manager_bridge=debug,blueprint_auth=debug,axum=debug,server_blueprint=debug,server_blueprint_cli=debug cargo tangle debug spawn --no-vm -p server-blueprint --binary ./target/debug/server-blueprint-cli 0 0 --http-rpc-url http://localhost:9944 --ws-rpc-url ws://localhost:9944
 ```
 
 3. In another terminal, request a new blueprint instance with the following payload (request args):
@@ -12,7 +12,7 @@ RUST_LOG=blueprint-rejection=trace,tangle-producer=debug,tangle-consumer=trace,b
   {
     "config": {
       "runtime": "docker",
-      "package": "tangle-mcp:0.1.0",
+      "package": "nginx:alpine",
       "args": [],
       "env": [],
       "transportAdapter": "none"
@@ -21,13 +21,13 @@ RUST_LOG=blueprint-rejection=trace,tangle-producer=debug,tangle-consumer=trace,b
 ]
 ```
 
-> **Note**: Port binding is now handled automatically by the blueprint. The MCP server will receive a `PORT` environment variable and must bind to that port.
+> **Note**: Port binding is now handled automatically by the blueprint. The server will receive a `PORT` environment variable and should bind to that port when possible.
 
 ```shell
-cargo tangle blueprint request-service --blueprint-id 0 --keystore-uri ./target/keystore --value 0 --target-operators 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY --params-file ./fixtures/03_tangle_mcp_docker.json
+cargo tangle blueprint request-service --blueprint-id 0 --keystore-uri ./target/keystore --value 0 --target-operators 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY --params-file ./fixtures/nginx_server.json
 ```
 
-> Note: also this file is in `./fixtures/03_tangle_mcp_docker.json`
+> Note: this example uses the nginx server configuration in `./fixtures/nginx_server.json`
 
 4. Accept the request:
 
@@ -35,25 +35,34 @@ cargo tangle blueprint request-service --blueprint-id 0 --keystore-uri ./target/
 cargo tangle blueprint accept-request --request-id 0 --keystore-uri ./target/keystore
 ```
 
-5. Now start the MCP server by sending a job-call with the allowed owner ECDSA Key as bytes.
+5. Now start the server by sending a job-call with the allowed owner ECDSA Key as bytes.
 
 ```shell
 cargo tangle blueprint submit --blueprint-id 0 --service-id 0 --keystore-uri ./target/keystore --watcher --job 0 --params-file ./fixtures/alice_ecdsa.json
 ```
 
-6. You should see the MCP Server url as the job output, now we need to generate an access token for the MCP server. This can be done by executing the
+6. You should see the Server URL as the job output, now we need to generate an access token for the server. This can be done by executing the
    following js script in `generate-auth-token.ts`:
 
 ```shell
 bun run generate-auth-token.ts
 ```
 
-Once the token is generated, you can use it to access the MCP server.
+Once the token is generated, you can use it to access the deployed server.
 
-7. We are going to test the MCP server using `@modelcontextprotocol/inspector` utility.
+7. You can now test the deployed server by accessing it directly via HTTP. For example, if you deployed nginx:
+
+```bash
+# Access the server with authentication token
+curl -H "Authorization: ${ACCESS_TOKEN}" http://localhost:8276/
+
+# Or use any HTTP client to interact with your deployed server
+```
+
+For MCP servers specifically, you can still use the MCP Inspector:
 
 ```shell
 npx -y @modelcontextprotocol/inspector
 ```
 
-Choose the `SSE` transport and enter the MCP server URL you got from the job output + `/sse`. Then, enter the generated access token in the Authorization header.
+Choose the `SSE` transport and enter the server URL you got from the job output + `/sse`. Then, enter the generated access token in the Authorization header.

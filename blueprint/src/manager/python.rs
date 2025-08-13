@@ -7,7 +7,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::SupportedTransportAdapter;
 use crate::error::Error;
-use crate::manager::McpRunner;
+use crate::manager::ServerRunner;
 use crate::transport::SseServer;
 
 /// Python runner
@@ -15,7 +15,7 @@ use crate::transport::SseServer;
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct PythonRunner;
 
-impl McpRunner for PythonRunner {
+impl ServerRunner for PythonRunner {
     #[tracing::instrument(skip(self, ctx), fields(%package, args, port_bindings, runtime = "python"))]
     async fn start(
         &self,

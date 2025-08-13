@@ -12,8 +12,8 @@ use futures::TryFutureExt;
 use crate::MyContext;
 use crate::error::Error;
 
-/// Start the configured MCP server
-pub async fn mcp_start(
+/// Start the configured server
+pub async fn server_start(
     Context(ctx): Context<MyContext>,
     ServiceId(service_id): ServiceId,
     BlockHash(block_hash): BlockHash,
@@ -50,10 +50,10 @@ pub async fn mcp_start(
         .map(|p| p.config)
         .map_err(Error::InvalidRequestParams)?;
 
-    blueprint_sdk::debug!(?config, %service_id, %owner, "Starting MCP server with config");
+    blueprint_sdk::debug!(?config, %service_id, %owner, "Starting server with config");
 
-    let mut mcp_server_manager = ctx.mcp_server_manager.lock().await;
-    let endpoint = mcp_server_manager
+    let mut server_manager = ctx.server_manager.lock().await;
+    let endpoint = server_manager
         .start_server(&ctx, service_id, owner.clone(), config)
         .await?;
 
@@ -62,7 +62,7 @@ pub async fn mcp_start(
     bridge
         .register_blueprint_service_proxy(
             service_id,
-            Some("mcp_"),
+            Some("server_"),
             &endpoint,
             &[
                 ServiceOwnerModel {

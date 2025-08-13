@@ -1,5 +1,5 @@
 [package]
-name = "mcp-blueprint-cli"
+name = "server-blueprint-cli"
 version.workspace = true
 description.workspace = true
 edition.workspace = true
@@ -12,7 +12,7 @@ categories.workspace = true
 keywords.workspace = true
 
 [dependencies]
-mcp-blueprint.workspace = true
+server-blueprint.workspace = true
 
 blueprint-sdk = { workspace = true, features = ["std", "tracing"] }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
@@ -22,13 +22,13 @@ tower.workspace = true
 color-eyre = { workspace = true }
 
 [build-dependencies]
-mcp-blueprint.workspace = true
+server-blueprint.workspace = true
 blueprint-sdk = { workspace = true, features = ["macros", "build"] }
 
 [package.metadata.blueprint]
 sources = [
-  { type = "Native", owner = "tangle-network", repo = "mcp-blueprint", tag = "0.1.0", binaries = [
-    { arch = "Amd64", os = "Linux", name = "amd64-linux-mcp-blueprint-cli" },
-    { arch = "Arm64", os = "Linux", name = "arm64-linux-mcp-blueprint-cli" },
+  { type = "Native", owner = "tangle-network", repo = "server-blueprint", tag = "0.1.0", binaries = [
+    { arch = "Amd64", os = "Linux", name = "amd64-linux-server-blueprint-cli" },
+    { arch = "Arm64", os = "Linux", name = "arm64-linux-server-blueprint-cli" },
   ] },
 ]

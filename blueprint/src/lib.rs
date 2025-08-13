@@ -1,4 +1,4 @@
-use crate::manager::McpServerManager;
+use crate::manager::ServerManager;
 use blueprint_sdk::macros::context::ServicesContext;
 use blueprint_sdk::runner::config::BlueprintEnvironment;
 use blueprint_sdk::tangle::extract::{List, Optional, TangleArg};
@@ -6,63 +6,63 @@ use docktopus::bollard::Docker;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-/// Different types of errors that can occur in the mcp server
+/// Different types of errors that can occur in the server
 mod error;
 /// Blueprint Jobs
 mod jobs;
-/// The mcp server manager
+/// The server manager
 mod manager;
-/// The MCP Transport converter
+/// The Transport converter
 mod transport;
 
-pub use jobs::{MCP_START_JOB_ID, MCP_STOP_JOB_ID, mcp_start, mcp_stop};
+pub use jobs::{SERVER_START_JOB_ID, SERVER_STOP_JOB_ID, server_start, server_stop};
 
-/// Represents the runtime of the MCP server (Python, JS, Docker etc.)
+/// Represents the runtime of the server (Python, JS, Docker etc.)
 #[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum McpRuntime {
+pub enum ServerRuntime {
     /// Unknown runtime
     #[default]
     Unknown,
-    /// Will use uvx to run the mcp server
+    /// Will use uvx to run the server
     Python,
-    /// Will use bunx to run the mcp server
+    /// Will use bunx to run the server
     Javascript,
-    /// using a docker container to run the mcp server
+    /// using a docker container to run the server
     Docker,
 }
 
 #[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct McpServerConfig {
-    /// The different runtimes that can be used to run the mcp server
-    pub runtime: McpRuntime,
-    /// The package to use for the mcp server or the docker image
+pub struct ServerConfig {
+    /// The different runtimes that can be used to run the server
+    pub runtime: ServerRuntime,
+    /// The package to use for the server or the docker image
     ///
-    /// Example: `mcp-server@x.y.z` for Python or JS, or `mcp-server:latest` for Docker
+    /// Example: `my-package@x.y.z` for Python or JS, or `nginx:latest` for Docker
     pub package: String,
-    /// A list of arguments to pass to the mcp server
+    /// A list of arguments to pass to the server
     /// This is optional and can be empty
     #[serde(default)]
     pub args: Optional<List<String>>,
-    /// Environment variables for the MCP server
+    /// Environment variables for the server
     /// This is optional and can be empty
     #[serde(default)]
     pub env: Optional<List<(String, String)>>,
-    /// The transport adapter to use for the MCP server
+    /// The transport adapter to use for the server
     #[serde(default)]
     pub transport_adapter: SupportedTransportAdapter,
 }
 
-/// The supported transport adapters for the MCP server
+/// The supported transport adapters for the server
 #[derive(Default, Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "lowercase")]
 #[non_exhaustive]
 pub enum SupportedTransportAdapter {
-    /// Converts the MCP server's stdout and stderr to Server-Sent Events (SSE) using our built-in SSE server
+    /// Converts the server's stdout and stderr to Server-Sent Events (SSE) using our built-in SSE server
     #[default]
     StdioToSSE,
-    /// No transport adapter, the MCP server will handle communication directly and give us a url to interact with
+    /// No transport adapter, the server will handle communication directly and give us a url to interact with
     None,
 }
 
@@ -88,14 +88,14 @@ impl SupportedTransportAdapter {
 #[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RequestParams {
-    pub config: McpServerConfig,
+    pub config: ServerConfig,
 }
 
 #[derive(Clone, ServicesContext)]
 pub struct MyContext {
     #[config]
     env: BlueprintEnvironment,
-    pub mcp_server_manager: Arc<Mutex<McpServerManager>>,
+    pub server_manager: Arc<Mutex<ServerManager>>,
     pub docker: Arc<Docker>,
 }
 
@@ -108,7 +108,7 @@ impl MyContext {
         })?;
         Ok(Self {
             env,
-            mcp_server_manager: Arc::new(Mutex::new(McpServerManager::default())),
+            server_manager: Arc::new(Mutex::new(ServerManager::default())),
             docker: docker_builder.client(),
         })
     }

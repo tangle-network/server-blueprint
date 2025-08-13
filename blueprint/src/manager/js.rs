@@ -6,7 +6,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::SupportedTransportAdapter;
 use crate::error::Error;
-use crate::manager::McpRunner;
+use crate::manager::ServerRunner;
 use crate::transport::SseServer;
 
 /// JavaScript runner
@@ -15,7 +15,7 @@ use crate::transport::SseServer;
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct JsRunner;
 
-impl McpRunner for JsRunner {
+impl ServerRunner for JsRunner {
     #[tracing::instrument(skip(self, ctx), fields(%package, args, port_bindings, runtime = "js"))]
     async fn start(
         &self,

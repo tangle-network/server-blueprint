@@ -1,22 +1,27 @@
-# MCP Blueprint for Tangle Network 🌐
+# Server Blueprint for Tangle Network 🌐
 
-## � Project Overview & Purpose
+## 🚀 Project Overview & Purpose
 
-This project is a blueprint for Tangle Network, designed to run remote MCPs (Model Context Protocol) services. When requesting a new instance of this blueprint, users get a new service instance with a specified configuration file that enables seamless MCP server deployment and management.
+This project is a blueprint for Tangle Network, designed to deploy and manage any HTTP server, database, or containerized application. When requesting a new instance of this blueprint, users get a new service instance with a specified configuration that enables seamless server deployment and management across multiple runtime environments.
 
-Blueprints are specifications for <abbr title="Actively Validated Services">AVS</abbr>s on the Tangle Network. An AVS is an off-chain service that runs arbitrary computations for a user-specified period of time. This MCP Blueprint provides a powerful abstraction for deploying and managing MCP servers across different runtime environments, allowing developers to create reusable MCP service infrastructures.
+Blueprints are specifications for <abbr title="Actively Validated Services">AVS</abbr>s on the Tangle Network. An AVS is an off-chain service that runs arbitrary computations for a user-specified period of time. This Server Blueprint provides a powerful abstraction for deploying and managing any type of server across different runtime environments, allowing developers to create reusable server infrastructures.
 
 For more details about Tangle Network Blueprints, please refer to the [project documentation](https://docs.tangle.tools/developers/blueprints/introduction).
 
 ## ⚙️ Configuration Details
 
-The blueprint supports configurations for various runtimes with automatic port management. All runtimes are internally converted to SSE (Server-Sent Events) for HTTP-based communication:
+The blueprint supports configurations for various runtimes with automatic port management. Two transport modes are available depending on your server type:
 
 ### Supported Runtimes
 
-- **STDIO transport in JavaScript (bun runtime)**: Executes MCP servers using `bunx` with automatic bun installation if needed
-- **STDIO transport in Python (python3)**: Executes MCP servers using `uvx` with automatic uv installation if needed
-- **Docker containers**: Runs MCP servers in Docker containers with intelligent port discovery, automatic port allocation, and environment variable injection
+- **JavaScript (bun runtime)**: Executes any JavaScript/Node.js applications using `bunx` with automatic bun installation if needed
+- **Python (python3)**: Executes any Python applications using `uvx` with automatic uv installation if needed  
+- **Docker containers**: Runs any containerized application with intelligent port discovery, automatic port allocation, and environment variable injection
+
+### Transport Modes
+
+- **`transportAdapter: "none"`**: **Recommended for most servers** - Direct HTTP server deployment without any transport conversion (perfect for web servers, APIs, databases)
+- **`transportAdapter: "stdioToSSE"`**: For specialized applications that communicate via STDIO and need SSE conversion
 
 ### Port Management & Transport Conversion
 
@@ -25,16 +30,17 @@ The blueprint automatically manages port allocation and converts all runtime con
 **Automatic Port Management:**
 
 - Ports are automatically allocated using the system's available port detection
-- The `PORT` environment variable is automatically injected into all MCP servers
-- MCP servers **must** bind to the port specified in the `PORT` environment variable
+- The `PORT` environment variable is automatically injected into all servers
+- Servers **should** bind to the port specified in the `PORT` environment variable for optimal compatibility
 - No manual port configuration required in blueprint requests
+- Docker containers have intelligent port discovery and mapping
 
-**Transport Conversion:**
+**Direct Server Access:**
 
-- HTTP-based communication for web clients
-- Bidirectional message forwarding between STDIO and SSE transports
-- Real-time streaming via Server-Sent Events
-- POST endpoint for client message submission
+- HTTP-based communication for standard web servers and APIs
+- Built-in authentication and authorization layer
+- Automatic container lifecycle management  
+- Support for environment variable injection
 
 ## 🔐 Authentication Workflow
 
@@ -46,30 +52,42 @@ The authentication workflow uses the script [`generate-auth-token.ts`](generate-
 4. **Token Verification**: Client submits signature to `/v1/auth/verify` endpoint
 5. **Access Token**: Server returns a time-limited access token
 
-Authentication is performed via an `Authorization` header when accessing the MCP server URL. The token format is `{token_id}|{token_string}`.
+Authentication is performed via an `Authorization` header when accessing the deployed server URL. The token format is `{token_id}|{token_string}`.
 
 ## 📋 Changelog & Breaking Changes
 
-**⚠️ Breaking Changes**: Recent updates introduce automatic port management. See [`CHANGELOG.md`](CHANGELOG.md) for detailed migration instructions and examples.
+**⚠️ Migration from MCP Blueprint**: This is a generalized version of the MCP blueprint for any server type. See [`CHANGELOG.md`](CHANGELOG.md) for detailed migration instructions and examples.
 
-**Key Changes:**
+**Key Features:**
 
-- Removed `portBindings` field from configuration
-- Added automatic `PORT` environment variable injection
-- MCP servers must now read port from `PORT` environment variable
+- Automatic port allocation and management
+- Support for any HTTP server, database, or containerized application
+- Built-in authentication and security layer
+- Multi-runtime support (Python, JavaScript, Docker)
 
 ## 🚀 Usage Examples & Demos
 
 ### Sample Configurations
 
-The [`fixtures`](fixtures) directory contains sample configurations for different runtime types:
+The [`fixtures`](fixtures) directory contains sample configurations for different server types:
 
+**Web Servers:**
+- **[`fixtures/nginx_server.json`](fixtures/nginx_server.json)**: Nginx web server
+- **[`fixtures/apache_server.json`](fixtures/apache_server.json)**: Apache HTTP server
+
+**Databases:**
+- **[`fixtures/postgres_database.json`](fixtures/postgres_database.json)**: PostgreSQL database with credentials
+- **[`fixtures/redis_database.json`](fixtures/redis_database.json)**: Redis cache server
+
+**Application Servers:**
+- **[`fixtures/nodejs_app.json`](fixtures/nodejs_app.json)**: Node.js application server
+- **[`fixtures/python_fastapi.json`](fixtures/python_fastapi.json)**: Python FastAPI application
+
+**Legacy MCP Examples:**
 - **[`fixtures/00_mcp_python3.json`](fixtures/00_mcp_python3.json)**: Python MCP server configuration
-- **[`fixtures/01_mcp_js.json`](fixtures/01_mcp_js.json)**: JavaScript MCP server with Context7 package
-- **[`fixtures/02_mcp_local_docker.json`](fixtures/02_mcp_local_docker.json)**: Local Docker MCP server with Redis environment
-- **[`fixtures/03_tangle_mcp_docker.json`](fixtures/03_tangle_mcp_docker.json)**: Tangle-specific Docker MCP configuration
+- **[`fixtures/01_mcp_js.json`](fixtures/01_mcp_js.json)**: JavaScript MCP server
 
-> **Note**: All sample configurations use the new format without `portBindings`. Port allocation is handled automatically by the blueprint.
+> **Note**: Most configurations use `"transportAdapter": "none"` for direct HTTP server deployment. Port allocation is handled automatically by the blueprint.
 
 ### Local Setup
 
@@ -97,17 +115,17 @@ For a detailed understanding of the internal workflow, see [`mcp-blueprint-flowc
 
 The blueprint process follows this high-level workflow:
 
-1. **Request Reception**: Receives a remote MCP request with configuration parameters
-2. **Configuration Processing**: Analyzes runtime type, package/image, and environment variables
+1. **Request Reception**: Receives a server deployment request with configuration parameters
+2. **Configuration Processing**: Analyzes runtime type, package/image, and environment variables  
 3. **Port Allocation**: Automatically allocates an available port and injects it as `PORT` environment variable
 4. **Runtime Initialization**:
    - **Python**: Installs/uses `uv` for package management and execution
    - **JavaScript**: Installs/uses `bun` for package management and execution
    - **Docker**: Pulls images, inspects for exposed ports, and creates containers with intelligent port binding
-5. **Transport Setup**: Converts STDIO communication to SSE for HTTP compatibility
-6. **Endpoint Exposure**: Provides HTTP URL with `/sse` and `/message` endpoints
-7. **Authentication**: Secures access through token-based authentication system
-8. **Client Interaction**: Enables MCP clients to connect and communicate via HTTP/SSE
+5. **Server Deployment**: Launches the server/application in the specified runtime environment
+6. **Endpoint Exposure**: Provides HTTP URL for direct server access
+7. **Authentication**: Secures access through token-based authentication system  
+8. **Client Interaction**: Enables clients to connect directly to the deployed server via HTTP
 
 ## 📋 Prerequisites
 
@@ -159,19 +177,23 @@ cargo tangle blueprint deploy
 
 to deploy the blueprint to the Tangle network.
 
-### Quick Reference for MCP Server Developers
+### Quick Reference for Server Developers
 
-When developing MCP servers for this blueprint:
+When developing servers for this blueprint:
 
-1. **Read Port from Environment**: Always use `process.env.PORT` (JS) or `os.environ['PORT']` (Python)
-2. **Bind to All Interfaces**: Use `0.0.0.0` or `127.0.0.1` as the host
-3. **No Port Configuration**: Remove any hardcoded ports from your server
-4. **Test Locally**: Set `PORT=3000` environment variable for local testing
+1. **Read Port from Environment**: Use `process.env.PORT` (JS) or `os.environ['PORT']` (Python) when possible
+2. **Bind to All Interfaces**: Use `0.0.0.0` as the host for container compatibility
+3. **Docker EXPOSE**: For Docker images, use `EXPOSE` directive for automatic port discovery
+4. **Environment Variables**: Access injected environment variables for configuration
+5. **Test Locally**: Set `PORT=3000` environment variable for local testing
 
 ```bash
-# Testing your MCP server locally
+# Testing your server locally
 export PORT=3000
-your-mcp-server-command
+your-server-command
+
+# Docker example with port environment variable
+docker run -e PORT=8080 -p 8080:8080 your-image
 ```
 
 ## 📜 License
