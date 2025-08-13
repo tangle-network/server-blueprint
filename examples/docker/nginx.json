@@ -4,8 +4,7 @@
       "runtime": "docker",
       "package": "nginx:alpine",
       "args": [],
-      "env": [],
-      "transportAdapter": "none"
+      "env": []
     }
   }
 ]

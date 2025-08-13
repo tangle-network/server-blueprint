@@ -10,7 +10,7 @@ For more details about Tangle Network Blueprints, please refer to the [project d
 
 ## ⚙️ Configuration Details
 
-The blueprint supports configurations for various runtimes with automatic port management. Two transport modes are available depending on your server type:
+The blueprint supports configurations for various runtimes with automatic port management and direct server deployment:
 
 ### Supported Runtimes
 
@@ -18,14 +18,9 @@ The blueprint supports configurations for various runtimes with automatic port m
 - **Python (python3)**: Executes any Python applications using `uvx` with automatic uv installation if needed  
 - **Docker containers**: Runs any containerized application with intelligent port discovery, automatic port allocation, and environment variable injection
 
-### Transport Modes
+### Port Management & Direct Deployment
 
-- **`transportAdapter: "none"`**: **Recommended for most servers** - Direct HTTP server deployment without any transport conversion (perfect for web servers, APIs, databases)
-- **`transportAdapter: "stdioToSSE"`**: For specialized applications that communicate via STDIO and need SSE conversion
-
-### Port Management & Transport Conversion
-
-The blueprint automatically manages port allocation and converts all runtime configurations to SSE transport:
+The blueprint automatically manages port allocation for direct server deployment:
 
 **Automatic Port Management:**
 
@@ -67,27 +62,44 @@ Authentication is performed via an `Authorization` header when accessing the dep
 
 ## 🚀 Usage Examples & Demos
 
-### Sample Configurations
+## 📁 Examples
 
-The [`fixtures`](fixtures) directory contains sample configurations for different server types:
+Ready-to-use examples organized by runtime type. See **[`examples/`](examples/)** directory for full documentation.
 
-**Web Servers:**
-- **[`fixtures/nginx_server.json`](fixtures/nginx_server.json)**: Nginx web server
-- **[`fixtures/apache_server.json`](fixtures/apache_server.json)**: Apache HTTP server
+### Quick Start Examples
 
-**Databases:**
-- **[`fixtures/postgres_database.json`](fixtures/postgres_database.json)**: PostgreSQL database with credentials
-- **[`fixtures/redis_database.json`](fixtures/redis_database.json)**: Redis cache server
+```bash
+# Web server (Docker - recommended)
+cargo tangle blueprint request-service examples/docker/nginx.json
 
-**Application Servers:**
-- **[`fixtures/nodejs_app.json`](fixtures/nodejs_app.json)**: Node.js application server
-- **[`fixtures/python_fastapi.json`](fixtures/python_fastapi.json)**: Python FastAPI application
+# Database (Docker)  
+cargo tangle blueprint request-service examples/docker/postgres.json
 
-**Legacy MCP Examples:**
-- **[`fixtures/00_mcp_python3.json`](fixtures/00_mcp_python3.json)**: Python MCP server configuration
-- **[`fixtures/01_mcp_js.json`](fixtures/01_mcp_js.json)**: JavaScript MCP server
+# Python HTTP server
+cargo tangle blueprint request-service examples/python/http-server.json
 
-> **Note**: Most configurations use `"transportAdapter": "none"` for direct HTTP server deployment. Port allocation is handled automatically by the blueprint.
+# JavaScript HTTP server
+cargo tangle blueprint request-service examples/javascript/http-server.json
+```
+
+### Directory Structure
+
+```
+examples/
+├── docker/          # 🐳 Docker containers (recommended)
+│   ├── nginx.json
+│   ├── postgres.json
+│   └── redis.json
+├── python/          # 🐍 Python packages
+│   └── http-server.json
+├── javascript/      # 🟨 JavaScript/Node.js packages  
+│   └── http-server.json
+└── legacy/          # 🗂️ Legacy MCP examples
+```
+
+**👉 For detailed documentation and more examples, see [`examples/README.md`](examples/README.md)**
+
+> **Note**: All servers are deployed directly without transport conversion. Port allocation is handled automatically by the blueprint.
 
 ### Local Setup
 
@@ -195,6 +207,30 @@ your-server-command
 # Docker example with port environment variable
 docker run -e PORT=8080 -p 8080:8080 your-image
 ```
+
+### How to Use the Fixtures
+
+**For Docker Applications:**
+- **Ready-to-use servers**: Use `nginx_server.json`, `postgres_database.json`, etc. - these work immediately
+- **Your custom app**: Replace `package` field with your Docker image name (e.g., `"your-registry/your-app:v1.0"`)
+- **Build your image**: Create a Dockerfile for your application, build it, and reference it in the config
+
+**For Python/JavaScript Applications:**
+- **Install packages**: The runtime will install and run the specified package using `uvx`/`bunx`
+- **Your custom package**: Publish to npm/PyPI or use git URLs (e.g., `"git+https://github.com/user/repo.git"`)
+
+**Example Dockerfile for Node.js:**
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+Then use: `"package": "your-registry/your-node-app:latest"`
 
 ## 📜 License
 

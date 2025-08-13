@@ -14,8 +14,7 @@ RUST_LOG=blueprint-rejection=trace,tangle-producer=debug,tangle-consumer=trace,b
       "runtime": "docker",
       "package": "nginx:alpine",
       "args": [],
-      "env": [],
-      "transportAdapter": "none"
+      "env": []
     }
   }
 ]
@@ -24,10 +23,10 @@ RUST_LOG=blueprint-rejection=trace,tangle-producer=debug,tangle-consumer=trace,b
 > **Note**: Port binding is now handled automatically by the blueprint. The server will receive a `PORT` environment variable and should bind to that port when possible.
 
 ```shell
-cargo tangle blueprint request-service --blueprint-id 0 --keystore-uri ./target/keystore --value 0 --target-operators 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY --params-file ./fixtures/nginx_server.json
+cargo tangle blueprint request-service --blueprint-id 0 --keystore-uri ./target/keystore --value 0 --target-operators 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY --params-file ./examples/docker/nginx.json
 ```
 
-> Note: this example uses the nginx server configuration in `./fixtures/nginx_server.json`
+> Note: this example uses the nginx server configuration in `./examples/docker/nginx.json`
 
 4. Accept the request:
 

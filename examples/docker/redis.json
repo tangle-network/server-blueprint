@@ -4,8 +4,7 @@
       "runtime": "docker",
       "package": "redis:7-alpine",
       "args": [],
-      "env": [],
-      "transportAdapter": "none"
+      "env": []
     }
   }
 ]

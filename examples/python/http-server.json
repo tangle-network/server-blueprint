@@ -1,0 +1,10 @@
+[
+  {
+    "config": {
+      "runtime": "python",
+      "package": "python",
+      "args": ["-m", "http.server"],
+      "env": []
+    }
+  }
+]

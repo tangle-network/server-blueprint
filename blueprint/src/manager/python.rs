@@ -1,14 +1,10 @@
 use std::collections::BTreeMap;
 
-use futures::TryFutureExt;
-use rmcp::transport::TokioChildProcess;
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
-use crate::SupportedTransportAdapter;
 use crate::error::Error;
 use crate::manager::ServerRunner;
-use crate::transport::SseServer;
 
 /// Python runner
 /// This runner uses the `uv` package to run Python scripts
@@ -16,7 +12,7 @@ use crate::transport::SseServer;
 pub struct PythonRunner;
 
 impl ServerRunner for PythonRunner {
-    #[tracing::instrument(skip(self, ctx), fields(%package, args, port_bindings, runtime = "python"))]
+    #[tracing::instrument(skip(self, ctx), fields(%package, args, runtime = "python"))]
     async fn start(
         &self,
         ctx: &crate::MyContext,
@@ -24,7 +20,6 @@ impl ServerRunner for PythonRunner {
         package: String,
         args: Vec<String>,
         env_vars: BTreeMap<String, String>,
-        transport_adapter: SupportedTransportAdapter,
     ) -> Result<CancellationToken, Error> {
         // Ensure uv is installed
         let mut checked = self.check(ctx).await;
@@ -42,25 +37,39 @@ impl ServerRunner for PythonRunner {
             }
         }
 
-        let allocated_port = env_vars
-            .get("PORT")
-            .and_then(|p| p.parse::<u16>().ok())
-            .ok_or(Error::MissingPortBinding)?;
-        let endpoint = format!("http://127.0.0.1:{allocated_port}");
+        blueprint_sdk::debug!("Starting Python server with uvx");
 
-        let factory = move || {
-            let mut cmd = Command::new("uvx");
-            cmd.arg("run")
-                .arg(&package)
-                .arg("--")
-                .args(&args)
-                .envs(&env_vars)
-                .kill_on_drop(true);
-            let transport = TokioChildProcess::new(&mut cmd);
-            futures::future::ready(transport)
-        };
+        // Start the Python process directly
+        let mut cmd = Command::new("uvx");
+        cmd.arg("run")
+            .arg(&package)
+            .arg("--")
+            .args(&args)
+            .envs(&env_vars)
+            .kill_on_drop(true);
 
-        let ct = SseServer::serve(endpoint.parse()?).await?.forward(factory);
+        let child = cmd.spawn().map_err(Error::Io)?;
+        
+        // Create cancellation token for cleanup
+        let ct = CancellationToken::new();
+        let cleanup_ct = ct.clone();
+        let child_id = child.id();
+
+        // Spawn cleanup task
+        tokio::spawn(async move {
+            cleanup_ct.cancelled().await;
+            if let Some(pid) = child_id {
+                blueprint_sdk::debug!(?pid, "Terminating Python process");
+                #[cfg(unix)]
+                {
+                    let _ = tokio::process::Command::new("kill")
+                        .arg(pid.to_string())
+                        .status()
+                        .await;
+                }
+            }
+        });
+
         Ok(ct)
     }
 
@@ -70,8 +79,8 @@ impl ServerRunner for PythonRunner {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .status()
-            .map_err(Error::Io)
-            .await?;
+            .await
+            .map_err(Error::Io)?;
         Ok(status.success())
     }
 
@@ -83,8 +92,8 @@ impl ServerRunner for PythonRunner {
             .arg("-c")
             .arg("curl -LsSf https://astral.sh/uv/install.sh | sh")
             .status()
-            .map_err(Error::Io)
-            .await?;
+            .await
+            .map_err(Error::Io)?;
         blueprint_sdk::debug!(?uv_install_status, "uv install status");
         if !uv_install_status.success() {
             return Err(Error::Io(std::io::Error::other(
@@ -98,8 +107,8 @@ impl ServerRunner for PythonRunner {
             .arg("python")
             .arg("install")
             .status()
-            .map_err(Error::Io)
-            .await?;
+            .await
+            .map_err(Error::Io)?;
         if python_install_status.success() {
             blueprint_sdk::debug!("Python installed successfully");
             Ok(())

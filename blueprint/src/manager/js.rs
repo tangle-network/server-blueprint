@@ -1,13 +1,9 @@
-use futures::TryFutureExt;
-use rmcp::transport::TokioChildProcess;
 use std::collections::BTreeMap;
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
-use crate::SupportedTransportAdapter;
 use crate::error::Error;
 use crate::manager::ServerRunner;
-use crate::transport::SseServer;
 
 /// JavaScript runner
 ///
@@ -16,7 +12,7 @@ use crate::transport::SseServer;
 pub struct JsRunner;
 
 impl ServerRunner for JsRunner {
-    #[tracing::instrument(skip(self, ctx), fields(%package, args, port_bindings, runtime = "js"))]
+    #[tracing::instrument(skip(self, ctx), fields(%package, args, runtime = "js"))]
     async fn start(
         &self,
         ctx: &crate::MyContext,
@@ -24,7 +20,6 @@ impl ServerRunner for JsRunner {
         package: String,
         args: Vec<String>,
         env_vars: BTreeMap<String, String>,
-        transport_adapter: SupportedTransportAdapter,
     ) -> Result<CancellationToken, Error> {
         // Ensure bun is installed
         let mut checked = self.check(ctx).await;
@@ -42,24 +37,39 @@ impl ServerRunner for JsRunner {
             }
         }
 
-        let allocated_port = env_vars
-            .get("PORT")
-            .and_then(|p| p.parse::<u16>().ok())
-            .ok_or(Error::MissingPortBinding)?;
-        let endpoint = format!("http://127.0.0.1:{allocated_port}");
+        blueprint_sdk::debug!("Starting JavaScript server with bunx");
 
-        let factory = move || {
-            let mut cmd = Command::new("bunx");
-            cmd.arg("-y")
-                .arg(&package)
-                .arg("--")
-                .args(&args)
-                .envs(&env_vars)
-                .kill_on_drop(true);
-            let transport = TokioChildProcess::new(&mut cmd);
-            futures::future::ready(transport)
-        };
-        let ct = SseServer::serve(endpoint.parse()?).await?.forward(factory);
+        // Start the JavaScript process directly
+        let mut cmd = Command::new("bunx");
+        cmd.arg("-y")
+            .arg(&package)
+            .arg("--")
+            .args(&args)
+            .envs(&env_vars)
+            .kill_on_drop(true);
+
+        let child = cmd.spawn().map_err(Error::Io)?;
+        
+        // Create cancellation token for cleanup
+        let ct = CancellationToken::new();
+        let cleanup_ct = ct.clone();
+        let child_id = child.id();
+
+        // Spawn cleanup task
+        tokio::spawn(async move {
+            cleanup_ct.cancelled().await;
+            if let Some(pid) = child_id {
+                blueprint_sdk::debug!(?pid, "Terminating JavaScript process");
+                #[cfg(unix)]
+                {
+                    let _ = tokio::process::Command::new("kill")
+                        .arg(pid.to_string())
+                        .status()
+                        .await;
+                }
+            }
+        });
+
         Ok(ct)
     }
 
@@ -69,8 +79,8 @@ impl ServerRunner for JsRunner {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .status()
-            .map_err(Error::Io)
-            .await?;
+            .await
+            .map_err(Error::Io)?;
         Ok(status.success())
     }
 
@@ -81,8 +91,8 @@ impl ServerRunner for JsRunner {
             .arg("-c")
             .arg("curl -fsSL https://bun.sh/install | bash")
             .status()
-            .map_err(Error::Io)
-            .await?;
+            .await
+            .map_err(Error::Io)?;
         if output.success() {
             blueprint_sdk::debug!("bun installed successfully");
             Ok(())

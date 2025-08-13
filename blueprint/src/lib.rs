@@ -12,8 +12,7 @@ mod error;
 mod jobs;
 /// The server manager
 mod manager;
-/// The Transport converter
-mod transport;
+
 
 pub use jobs::{SERVER_START_JOB_ID, SERVER_STOP_JOB_ID, server_start, server_stop};
 
@@ -49,40 +48,10 @@ pub struct ServerConfig {
     /// This is optional and can be empty
     #[serde(default)]
     pub env: Optional<List<(String, String)>>,
-    /// The transport adapter to use for the server
-    #[serde(default)]
-    pub transport_adapter: SupportedTransportAdapter,
+
 }
 
-/// The supported transport adapters for the server
-#[derive(Default, Clone, Copy, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "lowercase")]
-#[non_exhaustive]
-pub enum SupportedTransportAdapter {
-    /// Converts the server's stdout and stderr to Server-Sent Events (SSE) using our built-in SSE server
-    #[default]
-    StdioToSSE,
-    /// No transport adapter, the server will handle communication directly and give us a url to interact with
-    None,
-}
 
-impl SupportedTransportAdapter {
-    /// Returns `true` if the supported transport adapter is [`None`].
-    ///
-    /// [`None`]: SupportedTransportAdapter::None
-    #[must_use]
-    pub fn is_none(&self) -> bool {
-        matches!(self, Self::None)
-    }
-
-    /// Returns `true` if the supported transport adapter is [`StdioToSSE`].
-    ///
-    /// [`StdioToSSE`]: SupportedTransportAdapter::StdioToSSE
-    #[must_use]
-    pub fn is_stdio_to_sse(&self) -> bool {
-        matches!(self, Self::StdioToSSE)
-    }
-}
 
 /// The Service Request Parameters
 #[derive(Default, Clone, Debug, serde::Serialize, serde::Deserialize)]

@@ -20,22 +20,8 @@ futures.workspace = true
 tracing.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-tokio-stream = { workspace = true }
 tokio-util = { workspace = true }
 docktopus = { workspace = true, features = ["deploy"] }
-uuid = { workspace = true, features = ["v4"] }
-bytes = { workspace = true }
-rmcp = { workspace = true, features = [
-  "base64",
-  "server",
-  "client",
-  "tower",
-  "transport-child-process",
-  "transport-io",
-  "transport-sse-server",
-  "macros",
-] }
-axum = { workspace = true, features = [] }
 
 [dev-dependencies]
 blueprint-sdk = { workspace = true, features = ["testing", "tangle"] }

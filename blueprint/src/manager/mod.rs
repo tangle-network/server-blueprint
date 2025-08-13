@@ -17,7 +17,7 @@ use blueprint_sdk::tangle_subxt::subxt::utils::AccountId32;
 use tokio_util::sync::CancellationToken;
 
 use crate::error::Error;
-use crate::{ServerRuntime, SupportedTransportAdapter};
+use crate::ServerRuntime;
 
 /// TBD
 pub mod docker;
@@ -64,7 +64,6 @@ pub trait ServerRunner {
         package: String,
         args: Vec<String>,
         env_vars: BTreeMap<String, String>,
-        transport_adapter: SupportedTransportAdapter,
     ) -> Result<CancellationToken, Error>;
 
     /// Check if the runtime is installed and available
@@ -119,7 +118,6 @@ impl ServerManager {
                         config.package.clone(),
                         args.clone(),
                         env_vars.clone(),
-                        config.transport_adapter,
                     )
                     .await?
             }
@@ -131,7 +129,6 @@ impl ServerManager {
                         config.package.clone(),
                         args.clone(),
                         env_vars.clone(),
-                        config.transport_adapter,
                     )
                     .await?
             }
@@ -143,7 +140,6 @@ impl ServerManager {
                         config.package.clone(),
                         args.clone(),
                         env_vars.clone(),
-                        config.transport_adapter,
                     )
                     .await?
             }

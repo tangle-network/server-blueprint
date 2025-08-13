@@ -1,15 +1,13 @@
 use docktopus::bollard::image::{CreateImageOptions, ListImagesOptions};
 use docktopus::bollard::models::PortBinding;
 use docktopus::bollard::secret::{RestartPolicy, RestartPolicyNameEnum};
-use futures::{FutureExt, StreamExt, TryFutureExt};
+use futures::StreamExt;
 use std::collections::{BTreeMap, HashMap};
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
 
-use crate::SupportedTransportAdapter;
 use crate::error::Error;
 use crate::manager::ServerRunner;
-use crate::transport::SseServer;
 
 /// Docker runner
 #[derive(Debug, Clone)]
@@ -310,7 +308,6 @@ impl ServerRunner for DockerRunner {
         package: String,
         args: Vec<String>,
         mut env_vars: BTreeMap<String, String>,
-        transport_adapter: SupportedTransportAdapter,
     ) -> Result<CancellationToken, Error> {
         // Ensure Docker is available
         let mut checked = self.check(ctx).await;
@@ -346,7 +343,7 @@ impl ServerRunner for DockerRunner {
         // Since docktopus v0.3.0 doesn't support port bindings in Container API,
         // we need to create the container manually using bollard Config
         use docktopus::bollard::container::{
-            AttachContainerOptions, Config, CreateContainerOptions, RemoveContainerOptions,
+            Config, CreateContainerOptions, RemoveContainerOptions,
             StartContainerOptions, StopContainerOptions,
         };
         use docktopus::bollard::models::HostConfig;
@@ -425,48 +422,8 @@ impl ServerRunner for DockerRunner {
 
         blueprint_sdk::debug!(?container_id, "Started Docker container");
 
-        // Clone the necessary values for the factory closure
-        let docker_client_factory = docker_client.clone();
-        let factory_container_id = container_id.clone();
-
-        // Create Docker transport factory using async block approach
-        let factory = move || {
-            let docker_client_clone = docker_client_factory.clone();
-            let container_id_clone = factory_container_id.clone();
-
-            if transport_adapter.is_none() {
-                return futures::future::pending().boxed();
-            }
-
-            async move {
-                // Attach to the container to get stdin/stdout streams
-                let attach_options = AttachContainerOptions::<String> {
-                    stdout: Some(true),
-                    stdin: Some(true),
-                    stream: Some(true),
-                    ..Default::default()
-                };
-
-                match docker_client_clone
-                    .attach_container(&container_id_clone, Some(attach_options))
-                    .await
-                {
-                    Ok(res) => Ok(DockerTransport::new(res)),
-                    Err(e) => Err(std::io::Error::other(format!(
-                        "Failed to attach to Docker container: {e}"
-                    ))),
-                }
-            }
-            .boxed()
-        };
-
-        let ct = match transport_adapter {
-            SupportedTransportAdapter::StdioToSSE => {
-                let endpoint = format!("http://127.0.0.1:{allocated_port}");
-                SseServer::serve(endpoint.parse()?).await?.forward(factory)
-            }
-            SupportedTransportAdapter::None => CancellationToken::new(),
-        };
+        // Docker containers run directly without transport conversion
+        let ct = CancellationToken::new();
 
         // Create cleanup task that will stop the container when cancelled
         let stop_docker_client = docker_client.clone();
@@ -511,8 +468,8 @@ impl ServerRunner for DockerRunner {
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
             .status()
-            .map_err(Error::Io)
-            .await?;
+            .await
+            .map_err(Error::Io)?;
         Ok(status.success())
     }
 
@@ -522,53 +479,4 @@ impl ServerRunner for DockerRunner {
     }
 }
 
-struct DockerTransport {
-    results: docktopus::bollard::container::AttachContainerResults,
-}
 
-impl DockerTransport {
-    fn new(results: docktopus::bollard::container::AttachContainerResults) -> Self {
-        Self { results }
-    }
-}
-
-impl<R, A> rmcp::transport::IntoTransport<R, std::io::Error, A> for DockerTransport
-where
-    R: rmcp::service::ServiceRole,
-{
-    fn into_transport(
-        self,
-    ) -> (
-        impl futures::Sink<rmcp::service::TxJsonRpcMessage<R>, Error = std::io::Error> + Send + 'static,
-        impl futures::Stream<Item = rmcp::service::RxJsonRpcMessage<R>> + Send + 'static,
-    ) {
-        let stream = self.results.output;
-        let sink = rmcp::transport::io::from_async_write(self.results.input);
-        let mapped_stream = stream.map(|msg| match msg {
-            Ok(log) => serde_json::from_slice::<rmcp::service::RxJsonRpcMessage<R>>(log.as_ref())
-                .map_err(|e| {
-                    rmcp::service::RxJsonRpcMessage::<R>::Error(rmcp::model::JsonRpcError {
-                        jsonrpc: rmcp::model::JsonRpcVersion2_0,
-                        id: rmcp::model::NumberOrString::Number(1),
-                        error: rmcp::model::ErrorData {
-                            code: rmcp::model::ErrorCode::PARSE_ERROR,
-                            message: e.to_string().into(),
-                            data: None,
-                        },
-                    })
-                })
-                .unwrap(),
-            Err(e) => rmcp::service::RxJsonRpcMessage::<R>::Error(rmcp::model::JsonRpcError {
-                jsonrpc: rmcp::model::JsonRpcVersion2_0,
-                id: rmcp::model::NumberOrString::Number(1),
-                error: rmcp::model::ErrorData {
-                    code: rmcp::model::ErrorCode::INTERNAL_ERROR,
-                    message: e.to_string().into(),
-                    data: None,
-                },
-            }),
-        });
-
-        (sink, mapped_stream)
-    }
-}

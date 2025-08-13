@@ -21,9 +21,7 @@ pub enum Error {
     /// I/O error
     #[error(transparent)]
     Io(#[from] std::io::Error),
-    /// MCP error
-    #[error(transparent)]
-    Mcp(#[from] rmcp::Error),
+
     /// Invalid URL error
     #[error("Invalid address: {0}")]
     AddrParse(#[from] std::net::AddrParseError),

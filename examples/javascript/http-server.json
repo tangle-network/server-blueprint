@@ -1,0 +1,10 @@
+[
+  {
+    "config": {
+      "runtime": "javascript",
+      "package": "http-server",
+      "args": ["-p", "$PORT"],
+      "env": []
+    }
+  }
+]
