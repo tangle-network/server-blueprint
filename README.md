@@ -66,22 +66,6 @@ This is a generalized Server Blueprint intended for deploying arbitrary HTTP ser
 
 Ready-to-use examples organized by runtime type. See **[`examples/`](examples/)** directory for full documentation.
 
-### Quick Start Examples
-
-```bash
-# Web server (Docker - recommended)
-cargo tangle blueprint request-service examples/docker/nginx.json
-
-# Database (Docker)  
-cargo tangle blueprint request-service examples/docker/postgres.json
-
-# Python HTTP server
-cargo tangle blueprint request-service examples/python/http-server.json
-
-# JavaScript HTTP server
-cargo tangle blueprint request-service examples/javascript/http-server.json
-```
-
 ### Directory Structure
 
 ```
