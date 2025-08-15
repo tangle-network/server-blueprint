@@ -31,4 +31,4 @@ x86_64-apple-darwin = "macos-13"
 x86_64-unknown-linux-gnu = "ubuntu-24.04"
 
 [dist.bin-aliases]
-mcp-blueprint-cli = ["mbp"]
+# legacy alias kept intentionally? Replace with server-blueprint-cli if used

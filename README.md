@@ -51,7 +51,7 @@ Authentication is performed via an `Authorization` header when accessing the dep
 
 ## 📋 Changelog & Breaking Changes
 
-**⚠️ Migration from MCP Blueprint**: This is a generalized version of the MCP blueprint for any server type. See [`CHANGELOG.md`](CHANGELOG.md) for detailed migration instructions and examples.
+This is a generalized Server Blueprint intended for deploying arbitrary HTTP servers and services. See [`CHANGELOG.md`](CHANGELOG.md) for recent changes and examples.
 
 **Key Features:**
 
@@ -94,7 +94,7 @@ examples/
 │   └── http-server.json
 ├── javascript/      # 🟨 JavaScript/Node.js packages  
 │   └── http-server.json
-└── legacy/          # 🗂️ Legacy MCP examples
+└── legacy/          # 🗂️ Legacy examples (historical)
 ```
 
 **👉 For detailed documentation and more examples, see [`examples/README.md`](examples/README.md)**
@@ -109,13 +109,13 @@ To run the setup locally, follow the detailed instructions in [`DEMO.md`](DEMO.m
 2. Spawning the blueprint service
 3. Requesting a new blueprint instance
 4. Accepting the service request
-5. Starting the MCP server
+5. Starting the server
 6. Generating authentication tokens
-7. Testing with MCP Inspector
+7. Testing with HTTP clients (curl, browser, Postman)
 
 ### Internal Workflow
 
-For a detailed understanding of the internal workflow, see [`mcp-blueprint-flowchart.md`](mcp-blueprint-flowchart.md), which provides a comprehensive flowchart showing:
+For a detailed understanding of the internal workflow, see the code in `blueprint/src/manager/` which provides a clear overview of runtime initialization and port management:
 
 - User request flow and configuration processing
 - Runtime detection and package management
@@ -163,7 +163,7 @@ cargo install cargo-tangle --git https://github.com/tangle-network/blueprint
 
 - **Zero Configuration**: No need to specify port bindings in configuration files
 - **Conflict Prevention**: Automatic port allocation prevents port conflicts
-- **Environment Injection**: `PORT` environment variable automatically provided to MCP servers
+- **Environment Injection**: `PORT` environment variable automatically provided to servers
 - **Universal Compatibility**: Works across all runtime types (Python, JavaScript, Docker)
 - **Intelligent Docker Handling**: Automatically discovers exposed ports from Docker images and configures port mapping only when needed
 

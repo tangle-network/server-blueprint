@@ -1,6 +1,6 @@
 # Deployment Instructions to Live Testnet
 
-This document provides step-by-step instructions to deploy and test the MCP Blueprint on a live testnet.
+This document provides step-by-step instructions to deploy and test the Server Blueprint on a live testnet.
 
 ## Prerequisites
 
@@ -12,11 +12,11 @@ Before you begin, ensure you have the following:
 
 ## Step 1: Clone the Repository
 
-Start by cloning the MCP Blueprint repository to your local machine:
+Start by cloning the Server Blueprint repository to your local machine:
 
 ```bash
-git clone https://github.com/tangle-network/mcp-blueprint.git
-cd mcp-blueprint
+git clone https://github.com/tangle-network/server-blueprint.git
+cd server-blueprint
 ```
 
 ## Step 2: Install Dependencies
@@ -47,7 +47,7 @@ You should see the `blueprint.json` file in the output, indicating that the buil
 
 ## Step 5: Deploy the Blueprint
 
-Deploy the MCP Blueprint to the live testnet using the Tangle CLI:
+Deploy the Server Blueprint to the live testnet using the Tangle CLI:
 
 > [!NOTE]
 > Make sure to replace `target/keystore` with the path to your keystore containing the sr25519 and ECDSA keypairs.
@@ -67,9 +67,9 @@ And you can also list all deployed blueprints to verify:
 cargo tangle blueprint list-blueprints --ws-rpc-url wss://testnet-rpc.tangle.tools
 ```
 
-## Step 7: Register yourself as an Operator on the newly deployed MCP Blueprint
+## Step 7: Register yourself as an Operator on the newly deployed Server Blueprint
 
-To register yourself as an operator on the newly deployed MCP Blueprint, you can use the Tangle CLI to call the `register` command. Make sure to replace `<blueprint_id>` with the actual ID of your deployed blueprint.
+To register yourself as an operator on the newly deployed Server Blueprint, you can use the Tangle CLI to call the `register` command. Make sure to replace `<blueprint_id>` with the actual ID of your deployed blueprint.
 
 ```bash
 cargo tangle blueprint register --blueprint-id <blueprint_id> --keystore-uri ./target/keystore --ws-rpc-url wss://testnet-rpc.tangle.tools
@@ -77,12 +77,12 @@ cargo tangle blueprint register --blueprint-id <blueprint_id> --keystore-uri ./t
 
 > This may take a while to complete.
 
-## Step 8: Request a new Instance of the MCP Blueprint
+## Step 8: Request a new Instance of the Server Blueprint
 
 To request a new instance of the MCP Blueprint, use the Tangle CLI to call the `request-service` command. Again, replace `<blueprint_id>` with the actual ID of your deployed blueprint, your operator address, and ensure you have the correct parameters file ready, which should be in JSON format and contain the necessary parameters for the request.
 
 > [!NOTE]
-> For the `--params-file` option, you need to provide a path to a JSON file that contains the parameters for the request. This file should be structured according to the requirements of your MCP Blueprint. See [examples](./fixtures/) for sample parameter files.
+> For the `--params-file` option, you need to provide a path to a JSON file that contains the parameters for the request. This file should be structured according to the requirements of your Server Blueprint. See [examples](./examples/) for sample parameter files.
 
 ```bash
 cargo tangle blueprint request-service --blueprint-id <blueprint_id> --keystore-uri ./target/keystore --value 0 --target-operators <operator_address> --params-file <path_to_params_file> --ws-rpc-url wss://testnet-rpc.tangle.tools
@@ -104,10 +104,10 @@ With the instance accepted, you can now interact with it. Use the Tangle CLI to 
 cargo tangle blueprint submit --blueprint-id <blueprint_id> --service-id <service_id> --keystore-uri ./target/keystore --watcher --job <job_id> --params-file <path_to_params_file>
 ```
 
-Example job submission command to start the MCP instance:
+Example job submission command to start the server instance:
 
 ```bash
-cargo tangle blueprint submit --blueprint-id 0 --service-id 0 --keystore-uri ./target/keystore --watcher --job 0 --params-file ./fixtures/alice_ecdsa.json
+cargo tangle blueprint submit --blueprint-id 0 --service-id 0 --keystore-uri ./target/keystore --watcher --job 0 --params-file ./examples/legacy/alice_ecdsa.json
 ```
 
 > [!TIP]

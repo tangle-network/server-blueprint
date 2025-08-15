@@ -1,5 +1,5 @@
 {
-  description = "MCP Blueprint development environment";
+  description = "Server Blueprint development environment";
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";

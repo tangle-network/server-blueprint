@@ -1,7 +1,7 @@
 use docktopus::bollard::image::{CreateImageOptions, ListImagesOptions};
 use docktopus::bollard::models::PortBinding;
 use docktopus::bollard::secret::{RestartPolicy, RestartPolicyNameEnum};
-use futures::StreamExt;
+// use futures::StreamExt;
 use std::collections::{BTreeMap, HashMap};
 use tokio::process::Command;
 use tokio_util::sync::CancellationToken;
@@ -351,7 +351,7 @@ impl ServerRunner for DockerRunner {
         // Only configure port bindings if the image exposes ports
         let port_bindings_map = if let Some(&container_port) = exposed_ports.first() {
             blueprint_sdk::debug!(%container_port, %allocated_port, "Configuring port mapping");
-            // Set the PORT environment variable for the container that will be used by the MCP server
+        // Set the PORT environment variable for the container that will be used by the server
             env_vars.insert("PORT".to_string(), container_port.to_string());
 
             let mut port_bindings_map: HashMap<String, Option<Vec<PortBinding>>> = HashMap::new();
@@ -395,7 +395,7 @@ impl ServerRunner for DockerRunner {
         let create_response = docker_client
             .create_container(
                 Some(CreateContainerOptions {
-                    name: format!("mcp-server-{service_id}"),
+                    name: format!("server-{service_id}"),
                     platform: None,
                 }),
                 config,

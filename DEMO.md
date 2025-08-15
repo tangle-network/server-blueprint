@@ -37,7 +37,7 @@ cargo tangle blueprint accept-request --request-id 0 --keystore-uri ./target/key
 5. Now start the server by sending a job-call with the allowed owner ECDSA Key as bytes.
 
 ```shell
-cargo tangle blueprint submit --blueprint-id 0 --service-id 0 --keystore-uri ./target/keystore --watcher --job 0 --params-file ./fixtures/alice_ecdsa.json
+cargo tangle blueprint submit --blueprint-id 0 --service-id 0 --keystore-uri ./target/keystore --watcher --job 0 --params-file ./examples/legacy/alice_ecdsa.json
 ```
 
 6. You should see the Server URL as the job output, now we need to generate an access token for the server. This can be done by executing the
@@ -58,10 +58,4 @@ curl -H "Authorization: ${ACCESS_TOKEN}" http://localhost:8276/
 # Or use any HTTP client to interact with your deployed server
 ```
 
-For MCP servers specifically, you can still use the MCP Inspector:
-
-```shell
-npx -y @modelcontextprotocol/inspector
-```
-
-Choose the `SSE` transport and enter the server URL you got from the job output + `/sse`. Then, enter the generated access token in the Authorization header.
+You can also test with your browser or Postman using the returned server URL.
